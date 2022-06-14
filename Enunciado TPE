@@ -1,0 +1,336 @@
+
+
+
+
+                                                            May 24, 2022
+
+
+                    Trabajo PrÃ¡ctico Especial 2022/1
+                               RevisiÃ³n 0
+
+Resumen
+
+   Este documento describe el Trabajo Especial de la materia Protocolos
+   de ComunicaciÃ³n para la cursada del primer cuatrimestre del aÃ±o 2022.
+
+   En su ejecuciÃ³n los alumnos DEBEN demostrar habilidad para la
+   programaciÃ³n de aplicaciones cliente/servidor con sockets, la
+   comprensiÃ³n de estÃ¡ndares de la industria, y la capacidad de diseÃ±ar
+   protocolos de aplicaciÃ³n.
+
+TerminologÃ­a
+
+   Las palabras clave "DEBE", "NO DEBE", "OBLIGATORIO", "DEBERÃ", "NO
+   DEBERÃ", "DEBERÃA", "NO DEBERÃA", "RECOMENDADO", "PUEDE" y "OPCIONAL"
+   en este documento serÃ¡n interpretadas como se describe en el RFC 2119
+   [RFC2119].
+
+Tabla de Contenidos
+
+   1.  Requerimientos Funcionales  . . . . . . . . . . . . . . . . .   1
+   2.  Requerimientos No Funcionales . . . . . . . . . . . . . . . .   2
+   3.  EvaluaciÃ³n  . . . . . . . . . . . . . . . . . . . . . . . . .   4
+   4.  Referencias . . . . . . . . . . . . . . . . . . . . . . . . .   6
+     4.1.  Normative References  . . . . . . . . . . . . . . . . . .   6
+     4.2.  URIs  . . . . . . . . . . . . . . . . . . . . . . . . . .   6
+
+1.  Requerimientos Funcionales
+
+   El objetivo del trabajo es implementar un servidor proxy para el
+   protocolo SOCKSv5[RFC1928].
+
+   El servidor DEBE
+
+   1.  atender a mÃºltiples clientes en forma concurrente y simultÃ¡nea
+       (al menos 500).
+
+   2.  soportar autenticaciÃ³n usuario / contraseÃ±a [RFC1929].
+
+   3.  soportar de mÃ­nima conexiones salientes a a servicios TCP a
+       direcciones IPv4, IPV6, o utilizando FQDN que resuelvan
+       cualquiera de estos tipos de direcciones.
+
+
+
+
+                                Enunciado                       [Pag. 1]
+
+                         Trabajo Especial 2020/2                May 2022
+
+
+   4.  ser robusto en cuanto a las opciones de conexiÃ³n (si se utiliza
+       un FQDN que resuelve a mÃºltiples direcciones IP y una no estÃ¡
+       disponible debe intentar con otros).
+
+   5.  reportar los fallos a los clientes usando toda la potencia del
+       protocolo.
+
+   6.  implementar mecanismos que permitan recolectar mÃ©tricas que
+       ayuden a monitorear la operaciÃ³n del sistema.
+
+       A.  cantidad de conexiones histÃ³ricas
+
+       B.  cantidad de conexiones concurrentes
+
+       C.  cantidad de bytes transferidos
+
+       D.  cualquier otra mÃ©trica que considere oportuno para el
+           entendimiento del funcionamiento dinÃ¡mico del sistema
+
+       Las mÃ©tricas PUEDEN ser volÃ¡tiles (si se reinicia el servidor las
+       estadÃ­sticas pueden perderse).
+
+   7.  implementar mecanismos que permitan manejar usuarios cambiar la
+       configuraciÃ³n del servidor en tiempo de ejecuciÃ³n sin reiniciar
+       el servidor.  Las diferentes implementaciones PUEDEN decidir
+       disponibilizar otros cambios de ejecuciÃ³n en tiempo de ejecuciÃ³n
+       de otras configuraciones (memoria utilizada en I/O, timeouts,
+       etc).
+
+   8.  implementar un registro de acceso que permitan a un administrador
+       entender los accesos de cada uno de los usuarios.  Pensar en el
+       caso de que llega una queja externa y el administrador debe saber
+       quien fue el que se conectÃ³ a cierto sitio web y cuando.
+
+   9.  monitorear el trÃ¡fico y generar un registro de credenciales de
+       acceso (usuarios y passwords) de forma similar a ettercap por lo
+       menos para protocolo POP3.
+
+2.  Requerimientos No Funcionales
+
+   Adicionalmente, la implementaciÃ³n DEBE
+
+   1.  Estar escritos en el lenguaje de programaciÃ³n C, especÃ­ficamente
+       con la variante C11 (ISO/IEC 9899:2011).
+
+   2.  Utilizar sockets en modo no bloqueante multiplexada.
+
+
+
+
+
+                                Enunciado                       [Pag. 2]
+
+                         Trabajo Especial 2020/2                May 2022
+
+
+   3.  Tener en cuenta todos los aspectos que hagan a la buena
+       performance, escalabilidad y disponibilidad del servidor.  Se
+       espera que se maneje de forma eficiente los flujos de informaciÃ³n
+       (por ejemplo no cargar en memoria mensajes muy grandes, ser
+       eficaz y eficiente en el intÃ©rprete de mensajes).  El informe
+       DEBE contener informaciÃ³n sobre las pruebas de stress.  Algunas
+       preguntas interesantes a responder son:
+
+       *  Â¿Cual es la mÃ¡xima cantidad de conexiones simultÃ¡neas que
+          soporta?
+
+       *  Â¿CÃ³mo se degrada el throughput?
+
+   4.  Seguir los lineamientos de IEEE Std 1003.1-2008, 2016 Edition /
+       Base definitions / 12.  Utility Conventions [1] a menos que se
+       especifique lo contrario: Esto se refiere a cÃ³mo manejar
+       argumentos de lÃ­nea de comandos, parÃ¡metros, etc
+
+   5.  DeberÃ¡ documentar detalladamente el protocolo de monitoreo y
+       configuraciÃ³n e implementar una aplicaciÃ³n cliente.
+
+   6.  Tanto la aplicaciÃ³n servidor, como la aplicaciÃ³n cliente de
+       configuraciÃ³n/monitoreo DEBERÃN manejar los argumentos de lÃ­nea
+       de comandos de cierta forma uniforme (por ejemplo -c <puerto>
+       podrÃ­a especificar el puerto utilizado para el protocolo de
+       configuraciÃ³n/monitoreo).  Los detalles de quÃ© parÃ¡metros se
+       deben manejar serÃ¡ publicado en otro documento.
+
+   7.  Si bien las programas son pequeÃ±os podrÃ¡ utilizar librerÃ­as o
+       archivos (fragmento de cÃ³digo) desarrollados por terceros siempre
+       que se cumplan los siguientes requisitos:
+
+       A.  La librerÃ­a o fragmento NO DEBE resolver las cuestiones de
+           fondo del Trabajo PrÃ¡ctico.
+
+       B.  La librerÃ­a o fragmento DEBE tener una licencia aprobada por
+           la Open Source Initiative [2].
+
+       C.  El uso de la librerÃ­a o fragmento DEBE ser aprobada por la
+           CÃ¡tedra.
+
+       Para lograr la aprobaciÃ³n un alumno del grupo DEBE publicar una
+       secuencia en el foro de discusiÃ³n del trabajo prÃ¡ctico.  La
+       secuencia DEBE describir todos aquellos datos que permitan
+       identificar a la librerÃ­a (por ejemplo la versiÃ³n); su licencia
+       de esta forma justificando porquÃ© es vÃ¡lido su uso; y el
+       propÃ³sito de su inclusiÃ³n.  En caso de que sea un fragmento de
+       cÃ³digo debe adjuntarse.  EstÃ¡ permitido utilizar cÃ³digo publicado
+
+
+
+                                Enunciado                       [Pag. 3]
+
+                         Trabajo Especial 2020/2                May 2022
+
+
+       por los docentes durante la cursada actual, siempre que se
+       atribuya correctamente.
+
+   8.  A veces existirÃ¡n ambigÃ¼edades en las especificaciones o
+       mÃºltiples formas en como se puede resolver o implementar un
+       problema particular.  Por ser una materia de ingenierÃ­a se espera
+       que los alumnos tomen decisiones de diseÃ±o razonables en estos
+       casos.  Los alumnos pueden basar sus decisiones en lo que conoce
+       de ante mano de la tarea y en los objetivos enumerados en este
+       documento o demÃ¡s enunciados.  Los docentes pueden darle consejos
+       sobre las ventajas y desventajas de cada decisiones, pero los
+       alumnos son los que en Ãºltima instancia las toman.
+
+3.  EvaluaciÃ³n
+
+   La realizaciÃ³n del Trabajo PrÃ¡ctico es una actividad grupal.  La
+   calificaciÃ³n es de carÃ¡cter grupal; pero si hay evidencias de que un
+   alumno de un grupo no participÃ³ en la elaboraciÃ³n, o Ã©ste no puede
+   defender o demostrar su participaciÃ³n, entonces el alumno no podrÃ¡
+   aprobar el Trabajo PrÃ¡ctico.  Se espera transparencia en el
+   desarrollo del trabajo (entregar el repositorio git).
+
+   Cada grupo DEBE entregar todo el material necesario para poder
+   reproducir el Trabajo PrÃ¡ctico.  Como mÃ­nimo DEBE contener:
+
+   a.  Un informe en formato PDF [RFC3778] o text/plain (con
+       codificaciÃ³n UTF-8) que contenga las siguientes secciones
+       (respetando el orden):
+
+       1.   Ãndice
+
+       2.   DescripciÃ³n detallada de los protocolos y aplicaciones
+            desarrolladas.
+
+       3.   Problemas encontrados durante el diseÃ±o y la implementaciÃ³n.
+
+       4.   Limitaciones de la aplicaciÃ³n.
+
+       5.   Posibles extensiones.
+
+       6.   Conclusiones.
+
+       7.   Ejemplos de prueba.
+
+       8.   GuÃ­a de instalaciÃ³n detallada y precisa.  No es necesario
+            desarrollar un programa instalador.
+
+       9.   Instrucciones para la configuraciÃ³n.
+
+
+
+                                Enunciado                       [Pag. 4]
+
+                         Trabajo Especial 2020/2                May 2022
+
+
+       10.  Ejemplos de configuraciÃ³n y monitoreo.
+
+       11.  Documento de diseÃ±o del proyecto (que ayuden a entender la
+            arquitectura de la aplicaciÃ³n).
+
+   b.  CÃ³digos fuente y archivos de construcciÃ³n
+
+   c.  Un archivo README en la raÃ­z que describa al menos:
+
+       A.  la ubicaciÃ³n de todos los materiales previamente enumerados
+
+       B.  el procedimiento necesario para generar una versiÃ³n
+           ejecutable de las aplicaciones
+
+       C.  la ubicaciÃ³n de los diferentes artefactos generados
+
+       D.  cÃ³mo se debe ejecutar las diferentes artefactos generados (y
+           sus opciones)
+
+   La entrega se realizarÃ¡ por Campus ITBA en la asignaciÃ³n creada para
+   ello con una fecha de entrega.  Se DEBE entregar un tarball que sea
+   el producto de clonar el repositorio GIT (por lo tanto el repositorio
+   GIT DEBE contener todos los materiales de entrega), y su historia.
+
+   Una vez realizada la entrega los grupos DEBERÃN mostrar el correcto
+   funcionamiento del sistema con casos de prueba provisto por los
+   equipos y provistos ese dÃ­a por la CÃ¡tedra.
+
+   Para aprobar el Trabajo PrÃ¡ctico se DEBE cumplir TODAS las siguientes
+   condiciones:
+
+   o  El material entregado DEBE estar completo (por ejemplo no se puede
+      corregir si falta el informe o alguna clase)
+
+   o  Se utilizan Ãºnicamente las librerÃ­a permitidas para los usos
+      definidos.
+
+   o  DEBE ser correcta las cuestiones de entradas/salida no bloqueante.
+      Por ejemplo las lecturas, escrituras y el establecimiento de
+      nuevas conexiones DEBEN ser mediante suscripciones y no
+      bloquearse.
+
+   o  DEBE ser correcta las cuestiones relacionadas a la lectura/
+      escrituras parciales.
+
+   o  Sumar CUATRO puntos de calificaciÃ³n sobre DIEZ puntos posibles.
+
+
+
+
+
+                                Enunciado                       [Pag. 5]
+
+                         Trabajo Especial 2020/2                May 2022
+
+
+   Se aceptarÃ¡n entregas tardÃ­as entre 0 horas (inclusive) y 24 horas
+   (exclusivo) luego de la fecha lÃ­mite de entrega, pero la calificaciÃ³n
+   no podrÃ¡ execeder de CUATRO puntos.
+
+4.  Referencias
+
+4.1.  Normative References
+
+   [RFC1928]  Leech, M., Ganis, M., Lee, Y., Kuris, R., Koblas, D., and
+              L. Jones, "SOCKS Protocol Version 5", RFC 1928, March
+              1996.
+
+   [RFC1929]  Leech, M., "Username/Password Authentication for SOCKS
+              V5", RFC 1929, DOI 10.17487/RFC1929, March 1996,
+              <https://www.rfc-editor.org/info/rfc1929>.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC3778]  Taft, E., Pravetz, J., Zilles, S., and L. Masinter, "The
+              application/pdf Media Type", RFC 3778,
+              DOI 10.17487/RFC3778, May 2004,
+              <http://www.rfc-editor.org/info/rfc3778>.
+
+4.2.  URIs
+
+   [1] https://pubs.opengroup.org/onlinepubs/9699919799/nframe.html
+
+   [2] https://opensource.org/licenses
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                Enunciado                       [Pag. 6]
