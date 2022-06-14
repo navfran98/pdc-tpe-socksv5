@@ -14,10 +14,10 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/signal.h>
-#include "selector.h"
-
-#include "logger.h"
-#include "config.h"
+#include <signal.h>
+#include "../headers/selector.h"
+#include "../headers/logger.h"
+#include "../headers/config.h"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 #define ERROR_DEFAULT_MSG "something failed"
@@ -50,7 +50,7 @@ selector_error(const selector_status status) {
 
 
 static void
-wake_handler(const int signal) {
+wake_handler(/*const int signal*/) {
     // nada que hacer. está solo para interrumpir el select
 }
 

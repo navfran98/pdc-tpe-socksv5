@@ -2,7 +2,7 @@
 #define PROTOS2022A_SOCKSTM
 
 
-#include "./headers/stm.h"
+#include "../headers/stm.h"
 
 // Estados
 // 1. Client Greeting

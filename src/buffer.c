@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-#include "buffer.h"
+#include "../headers/buffer.h"
 
 #define MIN_BUFFER_SIZE 300
 
@@ -115,3 +115,4 @@ buffer_compact(buffer *b) {
         b->write = b->data + n;
     }
 }
+

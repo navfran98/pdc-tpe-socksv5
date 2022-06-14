@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include "utils/logger.h"
-#include "utils/socket_errors.h"
-#include "utils/selector.h"
-#include "utils/parameters.h"
+#include <netinet/in.h>
+#include "../headers/logger.h"
+#include "../headers/socket_errors.h"
+#include "../headers/selector.h"
+#include "../headers/parameters.h"
+#include "../headers/socksv5_server.h"
 
 static bool done = false;
 
@@ -33,7 +34,7 @@ static const struct fd_handler socksv5_passive_handler = {
 
 // Definimos los handlers para el socket pasivo de nuestro protocolo
 static const struct fd_handler manager_passive_handler = {
-    .handle_read       = admin_passive_accept,
+    .handle_read       = NULL /*admin_passive_accept*/,
     .handle_write      = NULL,
     .handle_close      = NULL, 
 };
@@ -146,6 +147,7 @@ int main(const int argc, const char ** argv){
 
    
 finally:
+    ;
     int ret = 0;
     if(ss != SELECTOR_SUCCESS) {
         fprintf(stderr, "%s: %s\n", (err_msg == NULL) ? "": err_msg, ss == SELECTOR_IO ? strerror(errno) : selector_error(ss));
@@ -172,10 +174,10 @@ finally:
         close(ipv6_manager_passive_socket);
     }
 
-    destroy_pop3_pool(); 
+    destroy_socksv5_pool(); 
     logger_destroy();
-    free(parameters->pass);
-    free(parameters->user);
+    // free(parameters->pass);
+    // free(parameters->user);
 
     return ret;
 }
@@ -188,12 +190,12 @@ static int register_all_fds(int fd1, int fd2, int fd3, int fd4, fd_selector s) {
     int ss;
 
     if(fd1 != -1) {
-        ss = selector_register(s, fd1, &pop3_passive_handler, OP_READ, NULL);
+        ss = selector_register(s, fd1, &socksv5_passive_handler, OP_READ, NULL);
         if(ss == SELECTOR_SUCCESS)
             fd1_failed = false;
     }
     if(fd2 != -1) {
-        ss = selector_register(s, fd2, &pop3_passive_handler, OP_READ, NULL);
+        ss = selector_register(s, fd2, &socksv5_passive_handler, OP_READ, NULL);
         if(ss == SELECTOR_SUCCESS)
             fd2_failed = false;
     }
@@ -228,10 +230,10 @@ static enum socket_errors create_ipv4_passive_socket(int *ret_socket) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    if(inet_pton(AF_INET, parameters->pop3_addr_ipv4, &addr.sin_addr) == 0) {
+    if(inet_pton(AF_INET, parameters->socksv5_ipv4, &addr.sin_addr) == 0) {
         return socket_inet_pton_error;
     }
-    addr.sin_port = htons(parameters->pop3_port);
+    addr.sin_port = htons(parameters->socksv5_port);
 
     *ret_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(*ret_socket < 0) {
@@ -260,10 +262,10 @@ static enum socket_errors create_ipv6_passive_socket(int *ret_socket) {
     struct sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
-    if (inet_pton(AF_INET6, parameters->pop3_addr_ipv6, &addr.sin6_addr) == 0) {
+    if (inet_pton(AF_INET6, parameters->socksv5_ipv6, &addr.sin6_addr) == 0) {
         return socket_inet_pton_error;
     }
-    addr.sin6_port = htons(parameters->pop3_port);
+    addr.sin6_port = htons(parameters->socksv5_port);
 
     *ret_socket = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
     if (*ret_socket < 0) {
@@ -272,7 +274,7 @@ static enum socket_errors create_ipv6_passive_socket(int *ret_socket) {
 
     setsockopt(*ret_socket, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
-    if (setsockopt(*ret_socket, SOL_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int)) < 0) {
+    if (setsockopt(*ret_socket, IPPROTO_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int)) < 0) {
         return socket_setsockopt_error;
     }
 
@@ -295,7 +297,7 @@ static enum socket_errors create_ipv4_manager_passive_socket(int *ret_socket) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    if(inet_pton(AF_INET, parameters->mng_addr, &addr.sin_addr) == 0) {
+    if(inet_pton(AF_INET, parameters->mng_ipv4, &addr.sin_addr) == 0) {
         return socket_inet_pton_error;
     }
     addr.sin_port = htons(parameters->mng_port);
@@ -326,7 +328,7 @@ static enum socket_errors create_ipv6_manager_passive_socket(int *ret_socket) {
     struct sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
-    if (inet_pton(AF_INET6, parameters->mng_addr_ipv6, &addr.sin6_addr) == 0) {
+    if (inet_pton(AF_INET6, parameters->mng_ipv6, &addr.sin6_addr) == 0) {
         return socket_inet_pton_error;
     }
     addr.sin6_port = htons(parameters->mng_port);
@@ -338,7 +340,7 @@ static enum socket_errors create_ipv6_manager_passive_socket(int *ret_socket) {
 
     setsockopt(*ret_socket, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
-    if (setsockopt(*ret_socket, SOL_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int)) < 0) {
+    if (setsockopt(*ret_socket, IPPROTO_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int)) < 0) {
         return socket_setsockopt_error;
     }
 

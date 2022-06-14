@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "./headers/logger.h"
+#include "../headers/logger.h"
 
 #define TIMESTAMP_LEN 50
 #define N(x) (sizeof(x)/sizeof((x)[0]))

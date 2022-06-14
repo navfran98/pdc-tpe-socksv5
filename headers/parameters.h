@@ -14,9 +14,9 @@ struct user {
 };
 
 struct params {
-    char * socks_ipv4;
-    char * socks_ipv6;
-    unsigned short socks_port;
+    char * socksv5_ipv4;
+    char * socksv5_ipv6;
+    unsigned short socksv5_port;
 
     char * mng_ipv4; 
     char * mng_ipv6;
@@ -25,8 +25,8 @@ struct params {
     //Opción para habilitar sniffing
     bool disectors_enabled;
 
-    struct user    users[MAX_USERS];
-    struct user    admin[MAX_ADMINS];
+    struct user users[MAX_USERS];
+    struct user admin[MAX_ADMINS];
 };
 
 typedef struct params * params;

@@ -129,7 +129,7 @@ typedef struct fd_handler {
   void (*handle_write)     (struct selector_key *key);
   void (*handle_block)     (struct selector_key *key);
 
-  /**
+/**
    * llamado cuando se se desregistra el fd
    * Seguramente deba liberar los recusos alocados en data.
    */
@@ -150,7 +150,7 @@ typedef struct fd_handler {
  * @return 0 si fue exitoso el registro.
  */
 selector_status
-selector_register(fd_selector        s,
+selector_register(fd_selector s,
                   const int          fd,
                   const fd_handler  *handler,
                   const fd_interest  interest,

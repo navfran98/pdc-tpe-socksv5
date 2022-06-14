@@ -13,4 +13,6 @@
 #define MANAGER_ADDR_IPV6 "::1"
 #define MANAGER_PORT 8080
 
+#define DISECTORS_ENABLED true
+
 #endif

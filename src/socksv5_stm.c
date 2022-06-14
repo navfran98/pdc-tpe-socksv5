@@ -10,10 +10,10 @@
 #include <memory.h>
 #include <netdb.h>
 
-#include "utils/selector.h"
-#include "utils/parameters.h"
-#include "socksv5_server.h"
-#include "socksv5_stm.h"
+#include "../headers/selector.h"
+#include "../headers/parameters.h"
+#include "../headers/socksv5_server.h"
+#include "../headers/socksv5_stm.h"
 
 
 /*
