@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "../../headers/greeting_parser.h"
+#include "../headers/greeting_parser.h"
 
 void
 greeting_parser_init(struct greeting_parser * p) {
@@ -13,7 +13,7 @@ greeting_parser_init(struct greeting_parser * p) {
 
 enum greeting_state
 consume_greeting_buffer(buffer *b, struct greeting_parser *p) {
-    enum greeting_state state = p->state;  // Le damos un valor por si no se entra en el while
+    enum greeting_state state = p->state; 
 
     while(buffer_can_read(b)) {
         const uint8_t c = buffer_read(b);
@@ -33,7 +33,7 @@ greeting_parser_feed(const uint8_t c, struct greeting_parser *p) {
     switch(p->state) {
 
         case greeting_reading_version:
-            if(c == PROXY_SOCKS_greeting_SUPPORTED_VERSION)
+            if(c == SOCKSV5_SUPPORTED_VERSION)
                 p->state = greeting_reading_nmethods;
             else
                 p->state = greeting_unsupported_version;
@@ -57,11 +57,11 @@ greeting_parser_feed(const uint8_t c, struct greeting_parser *p) {
         case greeting_reading_methods:
             p->methods[p->methods_index++] = c;
             if(p->methods_index == p->methods_remaining) {
-                p->state = greeting_finished;
+                p->state = greeting_done;
             }
             break;
         
-        case greeting_finished:
+        case greeting_done:
         case greeting_unsupported_version:
         case greeting_bad_syntax:
             // return these states now
@@ -79,7 +79,7 @@ greeting_marshall(buffer *b, const uint8_t method) {
     size_t space_left_to_write;
     uint8_t *where_to_write_next = buffer_write_ptr(b, &space_left_to_write);
 
-    where_to_write_next[0] = SUPPORTED_VERSION;
+    where_to_write_next[0] = SOCKSV5_SUPPORTED_VERSION;
     where_to_write_next[1] = method;
     buffer_write_adv(b, MARSHALL_SPACE);
 }

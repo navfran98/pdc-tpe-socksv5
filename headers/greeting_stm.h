@@ -2,7 +2,7 @@
 #define PROTOS2022A_GREETINGSTM
 
 #include "selector.h"
-#include "../src/parsers/greeting_parser.h"
+#include "greeting_parser.h"
 
 
 

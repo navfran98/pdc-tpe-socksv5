@@ -27,6 +27,20 @@ check_port(const char *s) {
 
 
 static void
+user(char *s, struct user *user) {
+    char *p = strchr(s, ':');
+    if(p == NULL) {
+        fprintf(stderr, "Missing password for user: %s\n",s);
+        exit(1);
+    } else {
+        user->name = s;
+        user->pass = p;
+    }
+
+}
+
+
+static void
 version(void) {
     fprintf(stderr, "socks5v version\n");
 }
@@ -62,9 +76,11 @@ parse_args(const int argc, char **argv) {
     parameters->disectors_enabled = DISECTORS_ENABLED;
 
     int c;
+    parameters->user_count = 0;
+    parameters->admin_count = 0;
 
     while (true) {
-        c = getopt(argc, argv, "hl:L:Np:P:v");
+        c = getopt(argc, argv, "hl:L:Np:P:v:u:a");
         if (c == -1)
             break;
 
@@ -87,6 +103,27 @@ parse_args(const int argc, char **argv) {
             case 'P':
                 parameters->mng_port = check_port(optarg);
                 break;
+
+            case 'a':
+                if(parameters->admin_count >= MAX_ADMINS) {
+                    fprintf(stderr, "Can't have more than %d admins.\n", MAX_ADMINS);
+                    exit(1);
+                } else {
+                    user(optarg, parameters->admin + parameters->admin_count);
+                    parameters->admin_count++;
+                }
+                break;
+
+            case 'u':
+                if(parameters->user_count >= MAX_USERS) {
+                    fprintf(stderr, "Can't have more than %d users.\n", MAX_USERS);
+                    exit(1);
+                } else {
+                    user(optarg, parameters->users + parameters->user_count);
+                    parameters->user_count++;
+                }
+                break;
+        
             case 'v':
                 version();
                 exit(0);
@@ -106,5 +143,27 @@ parse_args(const int argc, char **argv) {
         exit(1);
     }
 }
+
+
+bool authenticate_user(uint8_t * usr, uint8_t * password){
+    for(int i = 0; i < MAX_USERS; i++) {
+        const char* aux_name = parameters->users[i].name;
+        const char* aux_pass = parameters->users[i].pass;
+        if (strcmp((const char *) usr, aux_name) == 0 && strcmp((const char *) password, aux_pass) == 0)
+            return true;
+    }
+    return false;
+}
+
+bool authenticate_admin(uint8_t * usr, uint8_t * password) {
+    for(int i = 0; i < MAX_ADMINS; i++) {
+        const char* aux_name = parameters->admin[i].name;
+        const char* aux_pass = parameters->admin[i].pass;
+        if (strcmp((const char *) usr, aux_name) == 0 && strcmp((const char *) password, aux_pass) == 0)
+            return true;
+    }
+    return false;
+}
+
 
 

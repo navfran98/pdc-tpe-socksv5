@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define MAX_USERS 10
-#define MAX_ADMINS 1
+#define MAX_ADMINS 2
 
 struct user {
     char *name;
@@ -27,6 +27,9 @@ struct params {
 
     struct user users[MAX_USERS];
     struct user admin[MAX_ADMINS];
+
+    unsigned user_count;
+    unsigned admin_count;
 };
 
 typedef struct params * params;
@@ -34,5 +37,9 @@ typedef struct params * params;
 void parse_args(int argc, char **argv);
 
 extern params parameters;
+
+
+bool authenticate_user(uint8_t * usr, uint8_t * password);
+bool authenticate_admin(uint8_t * usr, uint8_t * password);
 
 #endif

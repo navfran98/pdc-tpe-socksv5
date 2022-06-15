@@ -6,7 +6,7 @@
 
 #define MARSHALL_SPACE 2
 
-#define SUPPORTED_VERSION 0x05
+#define SOCKSV5_SUPPORTED_VERSION 0x05
 
 // SOCKSv5 METHODS
 #define NO_AUTHENTICATION_REQUIRED        0x00
@@ -43,7 +43,7 @@ consume_greeting_buffer(buffer *b, struct greeting_parser *hp);
 
 
 enum greeting_state
-parse_single_greeting_character(uint8_t c, struct greeting_parser *hp);
+greeting_parser_feed(uint8_t c, struct greeting_parser *hp);
 
 
 void

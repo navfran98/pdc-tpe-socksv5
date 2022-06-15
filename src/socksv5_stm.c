@@ -62,16 +62,20 @@ const struct state_definition global_states_definition[] = {
         .state = GREETING_READ,
         .on_arrival     = greeting_init,
         .on_read_ready  = greeting_read,
-        .on_write_ready = greeting_write,
+        
     },
     {
         .state = GREETING_WRITE,
+        .on_write_ready = greeting_write,
     },
     {
         .state = AUTH_READ,
+        .on_arrival     = auth_init,
+        .on_read_ready  = auth_read,
     },
     {
         .state = AUTH_WRITE,
+        .on_write_ready = auth_write,
     },
      {
         .state = REQUEST_READ,

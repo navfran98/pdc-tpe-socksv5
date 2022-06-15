@@ -3,11 +3,11 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <string.h>
-#include "../../headers/greeting_stm.h"
-#include "../../headers/greeting_parser.h"
-#include "../../headers/socksv5_server.h"
-#include "../../headers/socksv5_stm.h"
-#include "../../headers/logger.h"
+#include "../headers/greeting_stm.h"
+#include "../headers/greeting_parser.h"
+#include "../headers/socksv5_server.h"
+#include "../headers/socksv5_stm.h"
+#include "../headers/logger.h"
 
 
 
@@ -35,15 +35,15 @@ greeting_read(struct selector_key *key) {
     struct greeting_stm * gstm = &ATTACHMENT(key)->client.greeting;
 
 	size_t nbytes;
-    uint8_t *where_to_write = buffer_write_ptr(&gstm->rb, &nbytes);
+    uint8_t *where_to_write = buffer_write_ptr(gstm->rb, &nbytes);
     ssize_t ret = recv(key->fd, where_to_write, nbytes, 0);  // Non blocking !
 
     uint8_t state_toret = GREETING_READ; // current state
 
     if(ret > 0) {
 
-        buffer_write_adv(&gstm->rb, ret);
-        enum greeting_state state = consume_greeting_buffer(&gstm->rb, &gstm->greeting_parser);
+        buffer_write_adv(gstm->rb, ret);
+        enum greeting_state state = consume_greeting_buffer(gstm->rb, &gstm->greeting_parser);
         if(state == greeting_done || state == greeting_bad_syntax || state == greeting_unsupported_version) {
 
             gstm->method_selected = select_method(gstm->greeting_parser.methods, gstm->greeting_parser.methods_remaining);
@@ -51,8 +51,8 @@ greeting_read(struct selector_key *key) {
             if(selector_set_interest_key(key, OP_WRITE) != SELECTOR_SUCCESS) {
                 goto finally;
             }
-            // Dejamos la respuesta del greeting en el buffer "wb" para enviarlo en el próximo estado
-            greeting_marshall(&gstm->wb, gstm->method_selected);
+
+            greeting_marshall(gstm->wb, gstm->method_selected);
 
             state_toret = GREETING_WRITE;
 
@@ -91,27 +91,24 @@ select_method(uint8_t *methods, uint8_t nmethods) {
 unsigned
 greeting_write(struct selector_key *key) {
     struct greeting_stm *gstm = &ATTACHMENT(key)->client.greeting;
-    struct socks5 *s5 = ATTACHMENT(key);
 
     size_t nbytes;
-    uint8_t *where_to_read = buffer_read_ptr(&gstm->wb, &nbytes);
+    uint8_t *where_to_read = buffer_read_ptr(gstm->wb, &nbytes);
 
     ssize_t ret = send(key->fd, where_to_read, nbytes, MSG_NOSIGNAL);
 
     uint8_t state_toret = GREETING_WRITE; // current state
     if(ret > 0) {
-        buffer_read_adv(&gstm->wb, nbytes);
-        if(!buffer_can_read(&gstm->wb)) {
+        buffer_read_adv(gstm->wb, nbytes);
+        if(!buffer_can_read(gstm->wb)) {
 
             if(selector_set_interest_key(key, OP_READ) != SELECTOR_SUCCESS) {
                 goto finally;
             }
 
             if(gstm->method_selected == NO_AUTHENTICATION_REQUIRED) {
-                // Ya estamos listos para leer el Request
                 state_toret = REQUEST_READ;
             } else if(gstm->method_selected == USERNAME_PASSWORD_AUTH) {
-                // Hay que leer ahora el user:pass
                 state_toret = AUTH_READ;
             } else {
                 goto finally;
