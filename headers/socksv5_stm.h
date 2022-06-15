@@ -44,15 +44,23 @@
 
 enum socksv5_global_state {
 
-    // 1
     GREETING_READ = 0,
-    // 2
+ 
     GREETING_WRITE,
-    // 3
+ 
     AUTH_READ,
-    // 4
+
     AUTH_WRITE,
 
+    REQUEST_READ,
+
+    REQUEST_WRITE,
+
+    RESPONSE_READ,
+
+    RESPONSE_WRITE,
+
+    
     DONE,
     ERROR_GLOBAL_STATE
 };

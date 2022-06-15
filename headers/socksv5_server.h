@@ -24,6 +24,11 @@ typedef struct socksv5 {
     char * origin_ip;
     uint16_t origin_port;
 
+    union
+    {
+        struct greeting_stm greeting;
+    } client;
+
     struct state_machine stm; // Gestor de máquinas de estado
     struct error_state err;
     int references;
