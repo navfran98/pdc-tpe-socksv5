@@ -65,7 +65,7 @@ finally:
     }
 }
 
-static struct socksv5 * new_socksv5(int client_fd) {
+struct socksv5 * new_socksv5(int client_fd) {
      struct socksv5 * socksv5;
 
     if (pool == NULL) {
@@ -189,6 +189,17 @@ socksv5_block(struct selector_key *key) {
 }
 
 void
-socksv5_close(struct selector_key *key) {
-    socksv5_destroy(ATTACHMENT(key));
+socksv5_timeout(struct selector_key *key) {
+	struct state_machine *stm  = &ATTACHMENT(key)->stm;
+	struct socksv5 * socksv5 = ATTACHMENT(key);
+
+	time(&socksv5->last_update);
+
+	enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_timeout(stm, key);
+
+	if(state == ERROR_GLOBAL_STATE) {
+		// TODO: habria que hacer un log sobre que hubo un error
+		socksv5_destroy(socksv5);
+	}
 }
+

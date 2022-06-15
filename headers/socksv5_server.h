@@ -38,7 +38,8 @@ typedef struct socksv5 {
 
 #define ATTACHMENT(key) ( (struct socksv5*)(key)->data)
 
-static struct socksv5 * new_socksv5(int client_fd);
+struct socksv5 * 
+new_socksv5(int client_fd);
 
 void
 socksv5_passive_accept(struct selector_key *key);
@@ -70,7 +71,7 @@ socksv5_block(struct selector_key *key);
 static const fd_handler socksv5_active_handler = {
         .handle_read = socksv5_read,
         .handle_write = socksv5_write,
-        .handle_timeout = socksv5_timeout
+        .handle_timeout = socksv5_timeout //TODO: implementar timeout
 };
 
 

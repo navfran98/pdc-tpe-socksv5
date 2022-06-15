@@ -8,6 +8,8 @@
 #include "../headers/parameters.h"
 #include "../headers/config.h"
 
+params parameters;
+
 static unsigned short
 check_port(const char *s) {
      char *end     = 0;
@@ -46,18 +48,18 @@ usage(const char *progname) {
 }
 
 void 
-parse_args(const int argc, char **argv, struct params *args) {
-    memset(args, 0, sizeof(*args)); // para setear en null los punteros de users
+parse_args(const int argc, char **argv) {
 
-    args->socksv5_ipv4 = SOCKS_ADDR_IPV4;
-    args->socksv5_ipv6 = SOCKS_ADDR_IPV6;
-    args->socksv5_port = SOCKS_PORT;
+    parameters = calloc(1,sizeof(*parameters));
+    parameters->socksv5_ipv4 = SOCKS_ADDR_IPV4;
+    parameters->socksv5_ipv6 = SOCKS_ADDR_IPV6;
+    parameters->socksv5_port = SOCKS_PORT;
 
-    args->mng_ipv4 = MANAGER_ADDR_IPV4;
-    args->mng_ipv6 = MANAGER_ADDR_IPV6;
-    args->mng_port = MANAGER_PORT;
+    parameters->mng_ipv4 = MANAGER_ADDR_IPV4;
+    parameters->mng_ipv6 = MANAGER_ADDR_IPV6;
+    parameters->mng_port = MANAGER_PORT;
 
-    args->disectors_enabled = DISECTORS_ENABLED;
+    parameters->disectors_enabled = DISECTORS_ENABLED;
 
     int c;
 
@@ -71,19 +73,19 @@ parse_args(const int argc, char **argv, struct params *args) {
                 usage(argv[0]);
                 break;
             case 'l':
-                args->socksv5_ipv4 = optarg;
+                parameters->socksv5_ipv4 = optarg;
                 break;
             case 'L':
-                args->mng_ipv4 = optarg;
+                parameters->mng_ipv4 = optarg;
                 break;
             case 'N':
-                args->disectors_enabled = false;
+                parameters->disectors_enabled = false;
                 break;
             case 'p':
-                args->socksv5_port = check_port(optarg);
+                parameters->socksv5_port = check_port(optarg);
                 break;
             case 'P':
-                args->mng_port = check_port(optarg);
+                parameters->mng_port = check_port(optarg);
                 break;
             case 'v':
                 version();

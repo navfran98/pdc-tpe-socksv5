@@ -15,8 +15,6 @@
 
 static bool done = false;
 
-struct params args;
-
 static void set_std_non_blocking();
 static int register_all_fds(int fd1, int fd2, int fd3, int fd4, fd_selector s);
 
@@ -46,8 +44,7 @@ sigterm_handler(const int signal) {
 }
 
 int main(const int argc, const char ** argv){
-
-    parse_args(argc, (char **) argv, &args); //TODO: fijarse de tener globalizado args
+    parse_args(argc, (char **) argv); //TODO: fijarse de tener globalizado parameters
 
     close(STDIN_FILENO);
     
@@ -66,6 +63,7 @@ int main(const int argc, const char ** argv){
     //creo socket ipv4
     enum socket_errors error = create_ipv4_passive_socket( &ipv4_passive_socket);
     if(error != socket_no_fail) {
+        printf("%d\n", error);
         printf("Error when creating IPV4 socket\n");
         one_passive_socket_failed = true;
     }

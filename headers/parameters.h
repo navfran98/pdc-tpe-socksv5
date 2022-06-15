@@ -31,7 +31,7 @@ struct params {
 
 typedef struct params * params;
 
-void parse_args(int argc, char **argv,  struct params * params);
+void parse_args(int argc, char **argv);
 
 extern params parameters;
 
