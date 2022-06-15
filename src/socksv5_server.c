@@ -48,7 +48,7 @@ void socksv5_passive_accept(struct selector_key *key) {
             goto finally;
     }
 
-    if(selector_register(key->s, client_sock, &socksv5_active_handler, OP_WRITE, socksv5) != SELECTOR_SUCCESS) {
+    if(selector_register(key->s, client_sock, &socksv5_active_handler, OP_READ, socksv5) != SELECTOR_SUCCESS) {
         remove_connection();
         goto finally;
     }

@@ -6,7 +6,7 @@
 #define MARSHALL_SPACE 2
 
 #define SUPPORTED_VERSION 0x01
-
+//The VER field is set to X’05’ for this version of the protocol.
 // PROTOCOL CODES
 #define VALID_USER                        0x00
 #define INVALID_USER                      0x01

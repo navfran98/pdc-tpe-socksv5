@@ -58,7 +58,7 @@ int main( int argc, char ** argv ) {
         }
 
         // Configuracion pre-conexion
-        int socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        int socket_fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
         if( socket_fd < 0 ) {
             fprintf(stderr, "Coudn't create socket.");
             exit(ERROR_CREATING_SOCKET);
@@ -69,7 +69,7 @@ int main( int argc, char ** argv ) {
 
         // Seteamos en 0 la estructura
         bzero(&addr, sizeof(struct sockaddr_in));
-        addr.sin_family = AF_INET;
+        addr.sin_family = AF_INET6;
         // Aca deberiamos recorrer toda la lista de addresses del host
         // pero como lo vamos a usar solo para el localhost no hace falta :D
         bcopy(server->h_addr_list[0], &addr.sin_addr.s_addr, server->h_length);
@@ -83,7 +83,8 @@ int main( int argc, char ** argv ) {
         }
 
         // Mandamos el greeting
-        size_t index = 0, n = 0;
+        size_t index = 0;
+        int n = 0;
         uint8_t * greeting_msg = malloc(4); // VERSION - 0x02 - 0x00 0x02
         greeting_msg[index++] = PROTOCOL_VERSION;
         greeting_msg[index++] = 0x02;
@@ -93,13 +94,41 @@ int main( int argc, char ** argv ) {
         if( n < 0 ) {
             fprintf(stderr, "Coudn't write to server.");
             exit(WRITE_TO_SERVER_FAILED);
+        }else{
+            printf("Le mando al proxy el hello\n");
         }
 
         // Leemos la respuesta al greeting del server
         uint8_t greeting_ans[2];
         bzero(greeting_ans, 2);
         n = recv(socket_fd, greeting_ans, 2, 0);
+        if(n < 0){
+            fprintf(stderr, "Coudn't receive from server.");
+            exit(WRITE_TO_SERVER_FAILED);
+        }else{
+            printf("Recibí del servidor: %u, %u\n",greeting_ans[0], greeting_ans[1]);
 
+        }
+        if( greeting_ans[1] == 2 ){
+            request_credentials();
+            index = 0;
+            uint8_t * auth_msg = malloc( 3 + sizeof(usr) + sizeof(pwd) );
+            auth_msg[index++] = 0x01;
+            auth_msg[index++] = strlen(usr);
+            for(; index < strlen(usr)+2; index++)
+                auth_msg[index] = usr[index-2];
+            auth_msg[index++] = strlen(pwd);
+            for(; index < strlen(pwd)+3+strlen(usr); index++)
+                auth_msg[index] = pwd[index-2];
+            n = write(socket_fd, auth_msg, index);
+            if( n < 0 ) {
+                fprintf(stderr, "Coudn't write to server.");
+                exit(WRITE_TO_SERVER_FAILED);
+            }
+
+        } else {
+
+        }
     } else {
         return 0;
     }

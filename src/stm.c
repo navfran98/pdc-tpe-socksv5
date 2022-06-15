@@ -3,6 +3,7 @@
  *         del selector.c
  */
 #include <stdlib.h>
+#include <stdio.h>
 #include "../headers/stm.h"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
@@ -37,6 +38,7 @@ handle_first(struct state_machine *stm, struct selector_key *key) {
 inline static
 void jump(struct state_machine *stm, unsigned next, struct selector_key *key) {
     if(next > stm->max_state) {
+        printf("Me pasé de estado, abortar!\n");
         abort();
     }
     if(stm->current != stm->states + next) {
@@ -59,6 +61,7 @@ void jump(struct state_machine *stm, unsigned next, struct selector_key *key) {
 
 unsigned
 stm_handler_read(struct state_machine *stm, struct selector_key *key) {
+    
     const unsigned first = handle_first(stm, key);
     if(first != stm->current->state) {
         // Hubo un error al intentar inicializar el estado

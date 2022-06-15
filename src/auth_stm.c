@@ -21,9 +21,9 @@ auth_init(const unsigned state, struct selector_key *key){
     authstm->rb = &(ATTACHMENT(key)->read_buffer);
     authstm->wb = &(ATTACHMENT(key)->write_buffer);
 
+
     auth_parser_init(&authstm->auth_parser);
     authstm->reply = AUTH_FAIL;
-
     return state; //TODO: hacer que esta función no devuelva state...
 
 
@@ -32,28 +32,36 @@ auth_init(const unsigned state, struct selector_key *key){
 
 unsigned
 auth_read(struct selector_key *key) {
+    printf("Entre al auth read\n");
     struct auth_stm *authstm = &ATTACHMENT(key)->client.auth;
-    struct socksv5 *s5 = ATTACHMENT(key);
+    struct socksv5 *socksv5 = ATTACHMENT(key);
 
     size_t nbytes;
     uint8_t *where_to_write = buffer_write_ptr(authstm->rb, &nbytes);
     ssize_t n = recv(key->fd, where_to_write, nbytes, 0);  // Non blocking !
 
+    // for(ssize_t i = 0; i<n; i++){
+    //         printf("%d",where_to_write[i]);
+    // }    
+
     uint8_t state_toret = AUTH_READ; // current state
     if(n > 0) {
         buffer_write_adv(authstm->rb, n);
+     
         enum auth_state state = consume_auth_buffer(authstm->rb, &authstm->auth_parser);
         if(state == auth_done || state == auth_bad_syntax || state == auth_unsupported_version || state == auth_bad_length) {
-
+            printf("State: %d\n", state);
             if(state == auth_done){
+                printf("%s", (char*)authstm->auth_parser.user);
                 if(authenticate_user(authstm->auth_parser.user, authstm->auth_parser.password)){
+                    printf("Reconocí al usuario!\n");
                     authstm->reply = AUTH_SUCCESS;
-
+                    
                     struct user authenticated_user = {
                             .name = (char*)authstm->auth_parser.user,
                             .pass = (char*)authstm->auth_parser.password
                     };
-                    memcpy(&s5->connected_user, &authenticated_user, sizeof(authenticated_user));
+                    memcpy(&socksv5->connected_user, &authenticated_user, sizeof(authenticated_user));
                 }else{
                     authstm->reply  = AUTH_FAIL;
                 }
@@ -63,11 +71,9 @@ auth_read(struct selector_key *key) {
                 goto finally;
             }
 
-
             auth_marshall(authstm->wb, authstm->reply);
 
             state_toret = AUTH_WRITE;
-
         }
     } else {
         goto finally;
@@ -82,6 +88,7 @@ finally:
 
 unsigned
 auth_write(struct selector_key *key) {
+    printf("Entré al write de auth\n");
     struct auth_stm *authstm = &ATTACHMENT(key)->client.auth;
 
     size_t nbytes;

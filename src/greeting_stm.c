@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
 #include <sys/socket.h>
@@ -16,28 +17,29 @@ static int select_method(uint8_t *methods, uint8_t nmethods);
 
 unsigned
 greeting_init(const unsigned state, struct selector_key *key) {
+    printf("Greeting init\n");
 	struct greeting_stm * gstm = &ATTACHMENT(key)->client.greeting;
 
     gstm->rb = &(ATTACHMENT(key)->read_buffer);
     gstm->wb = &(ATTACHMENT(key)->write_buffer);
 
-
     gstm->method_selected = -1;  
-
+    printf("Inicializando parser\n");
     greeting_parser_init(&gstm->greeting_parser);
-
+    printf("Parser inicializado\n");
     return state;   //TODO: cambiar funcion a que no retorne state, directamente esta función no lo cambia.. 
 }
 
 
 unsigned
 greeting_read(struct selector_key *key) {
+    printf("In greeting read\n");
     struct greeting_stm * gstm = &ATTACHMENT(key)->client.greeting;
 
 	size_t nbytes;
-    uint8_t *where_to_write = buffer_write_ptr(gstm->rb, &nbytes);
+    uint8_t * where_to_write = buffer_write_ptr(gstm->rb, &nbytes);
     ssize_t ret = recv(key->fd, where_to_write, nbytes, 0);  // Non blocking !
-
+    printf("Recibi del cliente\n");
     uint8_t state_toret = GREETING_READ; // current state
 
     if(ret > 0) {
@@ -45,9 +47,8 @@ greeting_read(struct selector_key *key) {
         buffer_write_adv(gstm->rb, ret);
         enum greeting_state state = consume_greeting_buffer(gstm->rb, &gstm->greeting_parser);
         if(state == greeting_done || state == greeting_bad_syntax || state == greeting_unsupported_version) {
-
             gstm->method_selected = select_method(gstm->greeting_parser.methods, gstm->greeting_parser.methods_remaining);
-
+            printf("State: %d\n",state);
             if(selector_set_interest_key(key, OP_WRITE) != SELECTOR_SUCCESS) {
                 goto finally;
             }
@@ -56,9 +57,11 @@ greeting_read(struct selector_key *key) {
 
             state_toret = GREETING_WRITE;
 
-        } 
+        } else{
+            printf("No termine de leer\n");
+        }
     } else {
-        
+        printf("ERROR");
         goto finally;
     }
     return state_toret;

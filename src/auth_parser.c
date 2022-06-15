@@ -31,8 +31,9 @@ auth_parser_feed(const uint8_t c, struct auth_parser *p) {
     switch(p->state) {
 
         case auth_reading_version:
-            if(c == SUPPORTED_VERSION)
+            if(c == SUPPORTED_VERSION){
                 p->state = auth_reading_user_len;
+            }
             else
                 p->state = auth_unsupported_version;
             break;
@@ -54,7 +55,7 @@ auth_parser_feed(const uint8_t c, struct auth_parser *p) {
         case auth_reading_user:
             p->user[p->index++] = c;
             if(p->index == p->chars_remaining) {
-                p->user[p->index++] = '\0';
+                p->user[p->index] = '\0';
                 p->state = auth_reading_pass_len;
             }
             break;
@@ -78,7 +79,7 @@ auth_parser_feed(const uint8_t c, struct auth_parser *p) {
         case auth_reading_pass:
             p->password[p->index++] = c;
             if(p->index == p->chars_remaining) {
-                p->password[p->index++] = '\0';
+                p->password[p->index] = '\0';
                 p->state = auth_done;
             }
             break;
