@@ -98,7 +98,7 @@ greeting_write(struct selector_key *key) {
     size_t nbytes;
     uint8_t *where_to_read = buffer_read_ptr(gstm->wb, &nbytes);
 
-    ssize_t ret = send(key->fd, where_to_read, nbytes, MSG_NOSIGNAL);
+    ssize_t ret = send(key->fd, where_to_read, nbytes, 0);
 
     uint8_t state_toret = GREETING_WRITE; // current state
     if(ret > 0) {

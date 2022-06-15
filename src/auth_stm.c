@@ -52,7 +52,6 @@ auth_read(struct selector_key *key) {
         if(state == auth_done || state == auth_bad_syntax || state == auth_unsupported_version || state == auth_bad_length) {
             printf("State: %d\n", state);
             if(state == auth_done){
-                printf("%s", (char*)authstm->auth_parser.user);
                 if(authenticate_user(authstm->auth_parser.user, authstm->auth_parser.password)){
                     printf("Reconocí al usuario!\n");
                     authstm->reply = AUTH_SUCCESS;
@@ -93,7 +92,7 @@ auth_write(struct selector_key *key) {
 
     size_t nbytes;
     uint8_t *where_to_read = buffer_read_ptr(authstm->wb, &nbytes);
-    ssize_t ret = send(key->fd, where_to_read, nbytes, MSG_NOSIGNAL);
+    ssize_t ret = send(key->fd, where_to_read, nbytes, 0);
 
     uint8_t state_toret = AUTH_WRITE; // current state
     if(ret > 0) {

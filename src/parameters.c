@@ -12,7 +12,7 @@ params parameters;
 
 static unsigned short
 check_port(const char *s) {
-     char *end     = 0;
+    char * end = 0;
     const long sl = strtol(s, &end, 10);
 
     if (end == s|| '\0' != *end
@@ -25,16 +25,36 @@ check_port(const char *s) {
     return (unsigned short)sl;
 }
 
+int splitstr(char * str,int len, char delim, char * str1, char * str2){
+    int flag = 0;
+    int j = 0;
+    for(int i=0; i < len; i++){
+        if(flag == 0){
+            if(str[i] == delim)
+                flag++;
+            else
+                str1[i] = str[i];
+        }else{
+            str2[j++] = str[i];
+        } 
+    }
+    return flag; 
+}
+
 
 static void
-user(char *s, struct user *user) {
-    char *p = strchr(s, ':');
-    if(p == NULL) {
-        fprintf(stderr, "Missing password for user: %s\n",s);
+user(char * s, struct user * user) {
+    int len = strlen(s); 
+    char * name = calloc(len,sizeof(char));
+    char * pass = calloc(len,sizeof(char));
+    int flag = splitstr(s,len, ':', name, pass);
+    printf("%s - %s\n", name, pass);
+    if(pass == NULL) {
+        fprintf(stderr, "Missing password for user: %s\n", name);
         exit(1);
     } else {
-        user->name = s;
-        user->pass = p;
+        user->name = name;
+        user->pass = pass;
     }
 
 }
@@ -42,11 +62,11 @@ user(char *s, struct user *user) {
 
 static void
 version(void) {
-    fprintf(stderr, "socks5v version\n");
+    fprintf(stderr, "socksv5 version\n");
 }
 
 static void
-usage(const char *progname) {
+usage(const char * progname) {
     fprintf(stderr,
         "Usage: %s [OPTION]...\n"
         "\n"
@@ -115,6 +135,7 @@ parse_args(const int argc, char **argv) {
                 break;
 
             case 'u':
+                printf("%s\n", optarg);
                 if(parameters->user_count >= MAX_USERS) {
                     fprintf(stderr, "Can't have more than %d users.\n", MAX_USERS);
                     exit(1);
@@ -146,9 +167,10 @@ parse_args(const int argc, char **argv) {
 
 
 bool authenticate_user(uint8_t * usr, uint8_t * password){
-    for(int i = 0; i < MAX_USERS; i++) {
-        const char* aux_name = parameters->users[i].name;
-        const char* aux_pass = parameters->users[i].pass;
+    for(int i = 0; i < parameters->user_count; i++) {
+        const char * aux_name = parameters->users[i].name;
+        const char * aux_pass = parameters->users[i].pass;
+        printf("name: %s - pass: %s\n",aux_name, aux_pass);
         if (strcmp((const char *) usr, aux_name) == 0 && strcmp((const char *) password, aux_pass) == 0)
             return true;
     }

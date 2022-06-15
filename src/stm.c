@@ -38,7 +38,6 @@ handle_first(struct state_machine *stm, struct selector_key *key) {
 inline static
 void jump(struct state_machine *stm, unsigned next, struct selector_key *key) {
     if(next > stm->max_state) {
-        printf("Me pasé de estado, abortar!\n");
         abort();
     }
     if(stm->current != stm->states + next) {
@@ -47,9 +46,6 @@ void jump(struct state_machine *stm, unsigned next, struct selector_key *key) {
         }
         stm->current = stm->states + next;
 
-        // if(NULL != stm->current->on_arrival) {
-        //     stm->current->on_arrival(stm->current->state, key);
-        // }
         if(NULL != stm->current->on_arrival) {
             unsigned ret_state = stm->current->on_arrival(stm->current->state, key);
             if(ret_state != stm->current->state){

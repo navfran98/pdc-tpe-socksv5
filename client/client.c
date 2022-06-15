@@ -58,7 +58,7 @@ int main( int argc, char ** argv ) {
         }
 
         // Configuracion pre-conexion
-        int socket_fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+        int socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if( socket_fd < 0 ) {
             fprintf(stderr, "Coudn't create socket.");
             exit(ERROR_CREATING_SOCKET);
@@ -69,7 +69,7 @@ int main( int argc, char ** argv ) {
 
         // Seteamos en 0 la estructura
         bzero(&addr, sizeof(struct sockaddr_in));
-        addr.sin_family = AF_INET6;
+        addr.sin_family = AF_INET;
         // Aca deberiamos recorrer toda la lista de addresses del host
         // pero como lo vamos a usar solo para el localhost no hace falta :D
         bcopy(server->h_addr_list[0], &addr.sin_addr.s_addr, server->h_length);
@@ -110,6 +110,8 @@ int main( int argc, char ** argv ) {
 
         }
         if( greeting_ans[1] == 2 ){
+
+            // Mandamos las credenciales
             request_credentials();
             index = 0;
             uint8_t * auth_msg = malloc( 3 + sizeof(usr) + sizeof(pwd) );
@@ -119,12 +121,13 @@ int main( int argc, char ** argv ) {
                 auth_msg[index] = usr[index-2];
             auth_msg[index++] = strlen(pwd);
             for(; index < strlen(pwd)+3+strlen(usr); index++)
-                auth_msg[index] = pwd[index-2];
+                auth_msg[index] = pwd[index-3-strlen(usr)];
             n = write(socket_fd, auth_msg, index);
             if( n < 0 ) {
                 fprintf(stderr, "Coudn't write to server.");
                 exit(WRITE_TO_SERVER_FAILED);
             }
+
 
         } else {
 
