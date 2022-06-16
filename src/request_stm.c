@@ -68,6 +68,7 @@ finally:
 
 unsigned
 request_write(struct selector_key *key) {
+    printf("REQUEST WRITE\n");
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
 
@@ -87,7 +88,8 @@ request_write(struct selector_key *key) {
                 if(selector_set_interest(key->s, socksv5->origin_fd, OP_READ) != SELECTOR_SUCCESS) {
                     goto finally;
                 }
-                return DONE; //ACA IRIA EL ESTADO DONDE YA ESTAN CONECTADOS Y EMPIEZAN A HABLARSE
+                printf("TENGO QUE IR AL COPY\n");
+                return DONE;
             } else {
                 return DONE;
             }

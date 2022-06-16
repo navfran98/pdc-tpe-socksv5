@@ -23,6 +23,7 @@
 #define ADDRESS_TYPE_NOT_SUPPORTED 0x08
 
 #define REQUEST_THROUGH_IPV4 0x01
+#define REQUEST_THROUGH_FQDN 0x03
 #define REQUEST_THROUGH_IPV6 0x04
 
 enum request_state {

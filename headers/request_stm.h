@@ -8,7 +8,7 @@
 #include "request_parser.h"
 
 struct request_stm {
-    struct request_parser request_parser;
+    struct request_parser request_parser; // tiene su estado 
 
     buffer * rb;
     buffer * wb;
@@ -16,6 +16,7 @@ struct request_stm {
     struct sockaddr_in  origin_addr_ipv4;
     struct sockaddr_in6 origin_addr_ipv6;
     struct addrinfo * origin_addrinfo;
+
 };
 
 unsigned

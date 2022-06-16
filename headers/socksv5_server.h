@@ -7,6 +7,7 @@
 #include "../headers/auth_stm.h"
 #include "../headers/greeting_stm.h"
 #include "../headers/request_stm.h"
+#include "../headers/origin_connect_stm.h"
 #include "../headers/parameters.h"
 
 #define MAX_CONCURRENT_CONNECTIONS 500

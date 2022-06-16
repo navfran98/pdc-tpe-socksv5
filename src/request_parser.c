@@ -77,6 +77,8 @@ request_parser_feed(const uint8_t c, struct request_parser * req_pars) {
                     req_pars->state = request_error;
                     req_pars->reply = GENERAL_SOCKS_SERVER_FAILURE;
                 }
+            }else if(c==REQUEST_THROUGH_FQDN){
+                req_pars->addr_len = 0;
             } else {
                 req_pars->reply = ADDRESS_TYPE_NOT_SUPPORTED;
                 req_pars->state = request_error;
@@ -90,7 +92,7 @@ request_parser_feed(const uint8_t c, struct request_parser * req_pars) {
             if(req_pars->addr_index == 0 && req_pars->addr_len == 0) {
                 if(c == 0) {
 					req_pars->addr[req_pars->addr_index] = 0;
-					req_pars->state = request_reading_port;
+					req_pars->state = request_reading_port; //El fqdn está vacío, pero no me importa dejo que rompa cuando intente conectarse.
 					break;
 				}
                 req_pars->addr_len = c;
@@ -133,44 +135,48 @@ request_parser_feed(const uint8_t c, struct request_parser * req_pars) {
 }
 
 void request_marshall(buffer * buff, struct request_parser * req_pars){
+    // size_t space_left;
+    // uint8_t * where_to_write = buffer_write_ptr(buff, &space_left);
+    // int len = floor(log10(abs(req_pars->port)))+1; 
+    // if(req_pars->atyp == 3){
+    //     if(space_left < 6 + req_pars->addr_len + len){
+    //         // return -1;
+    //         return;
+    //     }
+    //     where_to_write[0] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
+    //     where_to_write[1] = req_pars->reply;
+    //     where_to_write[2] = 0x00;
+    //     where_to_write[3] = req_pars->atyp;
+    //     where_to_write[4] = req_pars->addr_len;
+    //     int i = 5;
+    //     for(int j = 0; i < req_pars->addr_len; i++, j++){
+    //         where_to_write[i] = req_pars->addr[j];
+    //     }
+    //     snprintf(where_to_write, len, "%d", req_pars->port);
+    //     buffer_write_adv(buff, i+len);
+    //     // return 2;
+    //     return;
+    // } else {
+    //     if(space_left < 5 + req_pars->addr_len + len){
+    //         // return -1;
+    //         return;
+    //     }
+    //     where_to_write[0] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
+    //     where_to_write[1] = req_pars->reply;
+    //     where_to_write[2] = 0x00;
+    //     where_to_write[3] = req_pars->atyp;
+    //     int i = 4;
+    //     for(int j = 0; i < req_pars->addr_len; i++, j++){
+    //         where_to_write[i] = req_pars->addr[j];
+    //     }
+    //     int len = floor(log10(abs(req_pars->port)))+1; 
+    //     snprintf(where_to_write, len, "%d", req_pars->port);
+    //     buffer_write_adv(buff, i+len);
+    //     // return 2;
+    // }
     size_t space_left;
     uint8_t * where_to_write = buffer_write_ptr(buff, &space_left);
-    int len = floor(log10(abs(req_pars->port)))+1; 
-    if(req_pars->atyp == 3){
-        if(space_left < 6 + req_pars->addr_len + len){
-            // return -1;
-            return;
-        }
-        where_to_write[0] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
-        where_to_write[1] = req_pars->reply;
-        where_to_write[2] = 0x00;
-        where_to_write[3] = req_pars->atyp;
-        where_to_write[4] = req_pars->addr_len;
-        int i = 5;
-        for(int j = 0; i < req_pars->addr_len; i++, j++){
-            where_to_write[i] = req_pars->addr[j];
-        }
-        snprintf(where_to_write, len, "%d", req_pars->port);
-        buffer_write_adv(buff, i+len);
-        // return 2;
-        return;
-    } else {
-        if(space_left < 5 + req_pars->addr_len + len){
-            // return -1;
-            return;
-        }
-        where_to_write[0] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
-        where_to_write[1] = req_pars->reply;
-        where_to_write[2] = 0x00;
-        where_to_write[3] = req_pars->atyp;
-        int i = 4;
-        for(int j = 0; i < req_pars->addr_len; i++, j++){
-            where_to_write[i] = req_pars->addr[j];
-        }
-        int len = floor(log10(abs(req_pars->port)))+1; 
-        snprintf(where_to_write, len, "%d", req_pars->port);
-        buffer_write_adv(buff, i+len);
-        // return 2;
-        return;
-    }
+    where_to_write[0] = 0x05;
+    where_to_write[1] = 0x00;
+    buffer_write_adv(buff, 2);
 }
