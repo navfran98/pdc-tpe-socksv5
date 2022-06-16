@@ -8,7 +8,6 @@
 #define AUTH_FAIL 1
 
 
-
 struct auth_stm {
     struct auth_parser auth_parser;
 

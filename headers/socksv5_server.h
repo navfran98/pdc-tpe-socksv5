@@ -22,10 +22,14 @@ typedef struct socksv5 {
     int client_fd;
     int origin_fd;
 
+    //TODO: chequear si hay q cambiar el tipo
     char * client_ip;
     uint16_t client_port;
     char * origin_ip;
     uint16_t origin_port;
+
+    struct addrinfo * origin_resolution;
+    struct addrinfo * origin_resolution_current;
 
     struct user connected_user;
 
