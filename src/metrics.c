@@ -15,9 +15,9 @@ void remove_connection() {
 	concurrent_connections --;
 }
 
-void add_total_bytes_transferred(unsigned long long bytes) {
-	total_bytes_transferred += bytes;
-}
+// void add_total_bytes_transferred(unsigned long long bytes) {
+// 	total_bytes_transferred += bytes;
+// }
 
 long get_historical_connections() {
 	return historical_connections;
@@ -27,9 +27,9 @@ uint16_t get_concurrent_connections() {
 	return concurrent_connections;
 }
 
-unsigned long long get_total_bytes_transferred() {
-	return total_bytes_transferred;
-}
+// unsigned long long get_total_bytes_transferred() {
+// 	return total_bytes_transferred;
+// }
 
 
 

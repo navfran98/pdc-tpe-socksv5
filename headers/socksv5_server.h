@@ -6,18 +6,17 @@
 #include "../headers/buffer.h"
 #include "../headers/auth_stm.h"
 #include "../headers/greeting_stm.h"
+#include "../headers/request_stm.h"
 #include "../headers/parameters.h"
 
 #define MAX_CONCURRENT_CONNECTIONS 500
 #define N(x) (sizeof(x)/sizeof((x)[0]))
-
 
 struct error_state {
 	unsigned state;
 	char * message;
 	int code;
 };
-
 
 typedef struct socksv5 {
     int client_fd;
@@ -30,19 +29,17 @@ typedef struct socksv5 {
 
     struct user connected_user;
 
-
-    union
-    {
+    union {
         struct greeting_stm greeting;
         struct auth_stm auth;
         struct request_stm request;
     } client;
 
-    struct state_machine stm; // Gestor de máquinas de estado
+    struct state_machine stm;
     struct error_state err;
     int references;
 
-    time_t last_update; // Starts in 0. This connection will be cleaned when timeout reaches STATE_TIMEOUT
+    time_t last_update; 
     struct socksv5 * next;
 
     uint8_t raw_buff_a[MAX_BUFF_SIZE], raw_buff_b[MAX_BUFF_SIZE];
@@ -86,6 +83,5 @@ static const fd_handler socksv5_active_handler = {
         .handle_write = socksv5_write,
         .handle_timeout = socksv5_timeout 
 };
-
 
 #endif

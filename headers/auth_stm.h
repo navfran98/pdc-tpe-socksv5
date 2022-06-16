@@ -14,7 +14,7 @@ struct auth_stm {
 
     buffer * rb; 
     buffer * wb;
-
+    
     uint8_t reply; 
 };
 

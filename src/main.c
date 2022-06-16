@@ -44,7 +44,7 @@ sigterm_handler(const int signal) {
 }
 
 int main(const int argc, const char ** argv){
-    parse_args(argc, (char **) argv); //TODO: fijarse de tener globalizado parameters
+    parse_args(argc, (char **) argv);
 
     close(STDIN_FILENO);
     
@@ -143,7 +143,6 @@ int main(const int argc, const char ** argv){
         err_msg = "Closing";
     }
 
-   
 finally:
     ;
     int ret = 0;
@@ -174,8 +173,8 @@ finally:
 
     destroy_socksv5_pool(); 
     logger_destroy();
-    // free(parameters->pass);
-    // free(parameters->user);
+    free(parameters->pass);
+    free(parameters->user);
 
     return ret;
 }

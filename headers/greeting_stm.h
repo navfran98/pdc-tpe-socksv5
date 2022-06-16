@@ -4,8 +4,6 @@
 #include "selector.h"
 #include "greeting_parser.h"
 
-
-
 struct greeting_stm {
     struct greeting_parser greeting_parser;
 
@@ -15,17 +13,13 @@ struct greeting_stm {
     int method_selected;  
 };
 
-
 unsigned
 greeting_init(const unsigned state, struct selector_key *key);
-
 
 unsigned
 greeting_read(struct selector_key *key);
 
-
 unsigned
 greeting_write(struct selector_key *key);
-
 
 #endif

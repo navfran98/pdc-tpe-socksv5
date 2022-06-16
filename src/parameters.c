@@ -15,9 +15,7 @@ check_port(const char *s) {
     char * end = 0;
     const long sl = strtol(s, &end, 10);
 
-    if (end == s|| '\0' != *end
-    || ((LONG_MIN == sl || LONG_MAX == sl) && ERANGE == errno)
-    || sl < 0 || sl > USHRT_MAX) {
+    if (end == s|| '\0' != * end || ((LONG_MIN == sl || LONG_MAX == sl) && ERANGE == errno) || sl < 0 || sl > USHRT_MAX) {
         fprintf(stderr, "port should in in the range of 1-65536: %s\n", s);
         exit(1);
         return 1;
@@ -42,8 +40,7 @@ int splitstr(char * str,int len, char delim, char * str1, char * str2){
 }
 
 
-static void
-user(char * s, struct user * user) {
+static void user(char * s, struct user * user) {
     int len = strlen(s); 
     char * name = calloc(len,sizeof(char));
     char * pass = calloc(len,sizeof(char));
@@ -65,18 +62,18 @@ version(void) {
 }
 
 static void
-usage(const char * progname) {
+usage(const char * name) {
     fprintf(stderr,
         "Usage: %s [OPTION]...\n"
         "\n"
-        "   -h               Imprime la ayuda y termina.\n"
+        "   -h               Imprime guía de ayuda.\n"
         "   -l <SOCKS addr>  Dirección donde servirá el proxy SOCKS.\n"
-        "   -L <conf  addr>  Dirección donde servirá el servicio de management.\n"
+        "   -L <conf  addr>  Dirección donde servirá el servicio de admin.\n"
         "   -p <SOCKS port>  Puerto entrante conexiones SOCKS.\n"
-        "   -P <conf port>   Puerto entrante conexiones configuracion\n"
-        "   -v               Imprime información sobre la versión versión y termina.\n"
+        "   -P <conf port>   Puerto entrante conexiones admin\n"
+        "   -v               Imprime versión.\n"
         "\n",
-        progname);
+        name);
     exit(1);
 }
 

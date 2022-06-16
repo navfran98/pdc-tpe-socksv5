@@ -146,7 +146,6 @@ enum socksv5_global_state {
 
     RESPONSE_WRITE,
 
-    
     DONE,
     ERROR_GLOBAL_STATE
 };

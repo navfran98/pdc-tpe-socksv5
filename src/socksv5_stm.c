@@ -28,23 +28,26 @@ const struct state_definition global_states_definition[] = {
     },
     {
         .state = AUTH_READ,
-        .on_arrival     = auth_init,
+        .on_arrival = auth_init,
         .on_read_ready  = auth_read,
     },
     {
         .state = AUTH_WRITE,
         .on_write_ready = auth_write,
     },
-     {
+    {
         .state = REQUEST_READ,
+        .on_arrival = request_read_init,
+        .on_read_ready = request_read,
     },
-     {
+    {
         .state = REQUEST_WRITE,
+        .on_write_ready = request_write,
     },
     {
         .state = ORIGIN_CONNECT,
     },
-     {
+    {
         .state = RESPONSE_READ,
     },
     {

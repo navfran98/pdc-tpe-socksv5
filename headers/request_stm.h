@@ -1,7 +1,6 @@
 #ifndef PROTOS2022A_REQUESTSTM
 #define PROTOS2022A_REQUESTSTM
 
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -11,23 +10,21 @@
 struct request_stm {
     struct request_parser request_parser;
 
-    buffer * rb; // Exclusive internal buffers used for reading and writing Request
-    buffer * wb; //
-
+    buffer * rb;
+    buffer * wb;
 
     struct sockaddr_in  origin_addr_ipv4;
     struct sockaddr_in6 origin_addr_ipv6;
-    struct addrinfo     *origin_addrinfo;
+    struct addrinfo * origin_addrinfo;
 };
 
 unsigned
-request_init(const unsigned state, struct selector_key *key);
+request_read_init(const unsigned state, struct selector_key * key);
 
 unsigned
-request_read(struct selector_key *key);
+request_read(struct selector_key * key);
 
 unsigned
-request_write(struct selector_key *key);
-
+request_write(struct selector_key * key);
 
 #endif

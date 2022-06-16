@@ -1,143 +1,176 @@
 #include <stdlib.h>
-#include <stdio.h>   // used by print_current_request_parser()
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 #include "../headers/request_parser.h"
 
 void
-request_parser_init(struct request_parser *rp) {
-    rp->state = request_reading_version;
-    rp->addr_index = 0;
-    rp->atyp = -1;
-    rp->port = -1;  
-    rp->addr_len = -1;
-    rp->addr = NULL;
+request_parser_init(struct request_parser * req_pars) {
+    req_pars->state = request_reading_version;
+    req_pars->addr_index = 0;
+    req_pars->atyp = -1;
+    req_pars->port = -1;  
+    req_pars->addr_len = -1;
+    req_pars->addr = NULL;
 }
 
 enum request_state
-consume_request_buffer(buffer *b, struct request_parser *rp) {
-    enum request_state state = rp->state; 
+consume_request_buffer(buffer * buff, struct request_parser *req_pars) {
+    enum request_state state = req_pars->state; 
 
-    while(buffer_can_read(b)) {
-        const uint8_t c = buffer_read(b);
-        state = request_parser_feed(c, rp);
+    while(buffer_can_read(buff)) {
+        const uint8_t c = buffer_read(buff);
+        state = request_parser_feed(c, req_pars);
         if(state == request_done) {
-            // ejecutamos una vez más para generar el request_reply
-            request_parser_feed(c, rp);
+            request_parser_feed(c, req_pars);
             break;
         } else if(state == request_error) {
-            break;   // stop reading
+            break; 
         }
     }
-
     return state;
 }
 
-
 enum request_state
-request_parser_feed(const uint8_t c, struct request_parser *rp) {
-    switch(rp->state) {
+request_parser_feed(const uint8_t c, struct request_parser * req_pars) {
+    switch(req_pars->state) {
 
         case request_reading_version:
             if(c == PROXY_SOCKS_REQUEST_SUPPORTED_VERSION)
-                rp->state = request_reading_command;
+                req_pars->state = request_reading_command;
             else {
-                rp->reply = CONNECTION_NOT_ALLOWED_BY_RULESET; //Checkiar si esto es lo que hay que devolver...
-                rp->state = request_error;
+                req_pars->reply = CONNECTION_NOT_ALLOWED_BY_RULESET; 
+                req_pars->state = request_error;
             }
             break;
 
         case request_reading_command:
             if(c == CONNECT_COMMAND)
-                rp->state = request_reading_rsv;
+                req_pars->state = request_reading_rsv;
             else {
-                rp->reply = COMMAND_NOT_SUPPORTED;
-                rp->state = request_error;
+                req_pars->reply = COMMAND_NOT_SUPPORTED;
+                req_pars->state = request_error;
             }
             break;
         
         case request_reading_rsv:
             if(c == PROXY_SOCKS_REQUEST_RESERVED)
-                rp->state = request_reading_atyp;
+                req_pars->state = request_reading_atyp;
             else {
-                rp->reply = CONNECTION_NOT_ALLOWED_BY_RULESET; // ?? RSV como que no me importa, podría directamente pasar al proximo estado y sacar este else?
-                rp->state = request_error;
+                req_pars->reply = CONNECTION_NOT_ALLOWED_BY_RULESET; 
+                req_pars->state = request_error;
             }
             break;
         
         case request_reading_atyp:
             if(c == REQUEST_THROUGH_IPV4) {
-                rp->addr_len = 4;
-                rp->addr = calloc(4 + 1, sizeof(c));  // +1 for \0
-                if(rp->addr == NULL) {
-                    rp->state = request_error
-;
-                    rp->reply = GENERAL_SOCKS_SERVER_FAILURE; //Un error en un calloc debería tirar error del server, no?
+                req_pars->addr_len = 4;
+                req_pars->addr = calloc(4 + 1, sizeof(c));
+                if(req_pars->addr == NULL) {
+                    req_pars->state = request_error;
+                    req_pars->reply = GENERAL_SOCKS_SERVER_FAILURE; 
                 }
             } else if(c == REQUEST_THROUGH_IPV6) {
-                rp->addr_len = 16;
-                rp->addr = calloc(16 + 1, sizeof(c)); // +1 for \0
-                if(rp->addr == NULL) {
-                    rp->state = request_error
-;
-                    rp->reply = GENERAL_SOCKS_SERVER_FAILURE;
+                req_pars->addr_len = 16;
+                req_pars->addr = calloc(16 + 1, sizeof(c)); 
+                if(req_pars->addr == NULL) {
+                    req_pars->state = request_error;
+                    req_pars->reply = GENERAL_SOCKS_SERVER_FAILURE;
                 }
             } else {
-                rp->reply = ADDRESS_TYPE_NOT_SUPPORTED;
-                rp->state = request_error;
+                req_pars->reply = ADDRESS_TYPE_NOT_SUPPORTED;
+                req_pars->state = request_error;
                 break;
             }
-            
-            rp->atyp = c;
-            rp->state = request_reading_addr;
+            req_pars->atyp = c;
+            req_pars->state = request_reading_addr;
             break;
 
         case request_reading_addr:
-            if(rp->addr_index == 0 && rp->addr_len == 0) {
-            	if(c == 0) {
-					rp->addr[rp->addr_index] = 0;
-					rp->state = request_reading_port;
+            if(req_pars->addr_index == 0 && req_pars->addr_len == 0) {
+                if(c == 0) {
+					req_pars->addr[req_pars->addr_index] = 0;
+					req_pars->state = request_reading_port;
 					break;
 				}
-                // reading first byte from FQDN
-                rp->addr_len = c;
-                rp->addr = calloc(c + 1, sizeof(c)); // +1 for \0
-                if(rp->addr == NULL) {
-                    rp->state = request_error
-;
-                    rp->reply = GENERAL_SOCKS_SERVER_FAILURE;
+                req_pars->addr_len = c;
+                req_pars->addr = calloc(c + 1, sizeof(c)); 
+                if(req_pars->addr == NULL) {
+                    req_pars->state = request_error;
+                    req_pars->reply = GENERAL_SOCKS_SERVER_FAILURE;
                 }
             } else {
-                // Save the byte
-                rp->addr[rp->addr_index] = c;
-				rp->addr_index++;
-                if(rp->addr_index == rp->addr_len) {
-                    // ya pusimos todos los bytes
-                    rp->addr[rp->addr_index] = '\0';
-                    rp->state = request_reading_port;
+                req_pars->addr[req_pars->addr_index] = c;
+				req_pars->addr_index++;
+                if(req_pars->addr_index == req_pars->addr_len) {
+                    req_pars->addr[req_pars->addr_index] = '\0';
+                    req_pars->state = request_reading_port;
                 }
             }
             break;
         
         case request_reading_port:
-            if(rp->port == -1){ 
-                // first time here
-                rp->port = c * 256;
+            if(req_pars->port == -1){ 
+                req_pars->port = c * 256;
             } else {
-                rp->port += c;
-                rp->state = request_done;
+                req_pars->port += c;
+                req_pars->state = request_done;
             }
             break;
         
         case request_done:
-            rp->reply = SUCCEDED;
+            req_pars->reply = SUCCEDED;
             break;
             
         case request_error:
-            rp->reply = GENERAL_SOCKS_SERVER_FAILURE;
+            req_pars->reply = GENERAL_SOCKS_SERVER_FAILURE;
             break;
         
         default:
-            // Impossible state!
             exit(EXIT_FAILURE);
     }
-    return rp->state;
+    return req_pars->state;
+}
+
+void request_marshall(buffer * buff, struct request_parser * req_pars){
+    size_t space_left;
+    uint8_t * where_to_write = buffer_write_ptr(buff, &space_left);
+    int len = floor(log10(abs(req_pars->port)))+1; 
+    if(req_pars->atyp == 3){
+        if(space_left < 6 + req_pars->addr_len + len){
+            // return -1;
+            return;
+        }
+        where_to_write[0] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
+        where_to_write[1] = req_pars->reply;
+        where_to_write[2] = 0x00;
+        where_to_write[3] = req_pars->atyp;
+        where_to_write[4] = req_pars->addr_len;
+        int i = 5;
+        for(int j = 0; i < req_pars->addr_len; i++, j++){
+            where_to_write[i] = req_pars->addr[j];
+        }
+        snprintf(where_to_write, len, "%d", req_pars->port);
+        buffer_write_adv(buff, i+len);
+        // return 2;
+        return;
+    } else {
+        if(space_left < 5 + req_pars->addr_len + len){
+            // return -1;
+            return;
+        }
+        where_to_write[0] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
+        where_to_write[1] = req_pars->reply;
+        where_to_write[2] = 0x00;
+        where_to_write[3] = req_pars->atyp;
+        int i = 4;
+        for(int j = 0; i < req_pars->addr_len; i++, j++){
+            where_to_write[i] = req_pars->addr[j];
+        }
+        int len = floor(log10(abs(req_pars->port)))+1; 
+        snprintf(where_to_write, len, "%d", req_pars->port);
+        buffer_write_adv(buff, i+len);
+        // return 2;
+        return;
+    }
 }

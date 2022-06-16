@@ -63,7 +63,6 @@ struct state_definition {
     unsigned (*on_timeout)(struct selector_key *key);
 };
 
-
 /** inicializa el la máquina */
 void
 stm_init(struct state_machine *stm);
@@ -91,6 +90,5 @@ stm_handler_block(struct state_machine *stm, struct selector_key *key);
 /** indica que ocurrió el evento close. retorna nuevo id de nuevo estado. */
 void
 stm_handler_close(struct state_machine *stm, struct selector_key *key);
-
 
 #endif
