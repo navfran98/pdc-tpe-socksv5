@@ -140,6 +140,8 @@ enum socksv5_global_state {
     /////////////////////////////////////////////////////////////////////////
     REQUEST_WRITE,
 
+    ORIGIN_CONNECT,
+
     RESPONSE_READ,
 
     RESPONSE_WRITE,

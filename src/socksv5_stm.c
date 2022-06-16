@@ -41,6 +41,9 @@ const struct state_definition global_states_definition[] = {
      {
         .state = REQUEST_WRITE,
     },
+    {
+        .state = ORIGIN_CONNECT,
+    },
      {
         .state = RESPONSE_READ,
     },

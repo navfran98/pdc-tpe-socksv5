@@ -128,6 +128,21 @@ int main( int argc, char ** argv ) {
                 exit(WRITE_TO_SERVER_FAILED);
             }
 
+            uint8_t auth_ans[2];
+            //ahora tengo recibir lo que me da el servidor 
+            n = recv(socket_fd, auth_ans, 2, 0);
+            if(n < 0){
+                fprintf(stderr, "Coudn't receive from server.");
+                exit(WRITE_TO_SERVER_FAILED);
+            }else{
+                printf("Recibí del servidor: %u, %u\n",auth_ans[0], auth_ans[1]);
+                if(auth_ans[1] == 0){
+                    //Me autentiqué! Ahora quiero empezar lo de las requests...
+                }
+                else{
+                    return 1;
+                }
+            }
 
         } else {
 

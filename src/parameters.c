@@ -47,8 +47,7 @@ user(char * s, struct user * user) {
     int len = strlen(s); 
     char * name = calloc(len,sizeof(char));
     char * pass = calloc(len,sizeof(char));
-    int flag = splitstr(s,len, ':', name, pass);
-    printf("%s - %s\n", name, pass);
+    splitstr(s,len, ':', name, pass);
     if(pass == NULL) {
         fprintf(stderr, "Missing password for user: %s\n", name);
         exit(1);
@@ -167,10 +166,9 @@ parse_args(const int argc, char **argv) {
 
 
 bool authenticate_user(uint8_t * usr, uint8_t * password){
-    for(int i = 0; i < parameters->user_count; i++) {
+    for(unsigned int i = 0; i < parameters->user_count; i++) {
         const char * aux_name = parameters->users[i].name;
         const char * aux_pass = parameters->users[i].pass;
-        printf("name: %s - pass: %s\n",aux_name, aux_pass);
         if (strcmp((const char *) usr, aux_name) == 0 && strcmp((const char *) password, aux_pass) == 0)
             return true;
     }
@@ -178,7 +176,7 @@ bool authenticate_user(uint8_t * usr, uint8_t * password){
 }
 
 bool authenticate_admin(uint8_t * usr, uint8_t * password) {
-    for(int i = 0; i < MAX_ADMINS; i++) {
+    for(unsigned int i = 0; i < parameters->admin_count; i++) {
         const char* aux_name = parameters->admin[i].name;
         const char* aux_pass = parameters->admin[i].pass;
         if (strcmp((const char *) usr, aux_name) == 0 && strcmp((const char *) password, aux_pass) == 0)

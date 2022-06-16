@@ -35,6 +35,7 @@ typedef struct socksv5 {
     {
         struct greeting_stm greeting;
         struct auth_stm auth;
+        struct request_stm request;
     } client;
 
     struct state_machine stm; // Gestor de máquinas de estado

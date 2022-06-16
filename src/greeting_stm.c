@@ -17,29 +17,28 @@ static int select_method(uint8_t *methods, uint8_t nmethods);
 
 unsigned
 greeting_init(const unsigned state, struct selector_key *key) {
-    printf("Greeting init\n");
+
 	struct greeting_stm * gstm = &ATTACHMENT(key)->client.greeting;
 
     gstm->rb = &(ATTACHMENT(key)->read_buffer);
     gstm->wb = &(ATTACHMENT(key)->write_buffer);
 
     gstm->method_selected = -1;  
-    printf("Inicializando parser\n");
+
     greeting_parser_init(&gstm->greeting_parser);
-    printf("Parser inicializado\n");
+
     return state;   //TODO: cambiar funcion a que no retorne state, directamente esta función no lo cambia.. 
 }
 
 
 unsigned
 greeting_read(struct selector_key *key) {
-    printf("In greeting read\n");
+    printf("GREETING READ\n");
     struct greeting_stm * gstm = &ATTACHMENT(key)->client.greeting;
 
 	size_t nbytes;
     uint8_t * where_to_write = buffer_write_ptr(gstm->rb, &nbytes);
     ssize_t ret = recv(key->fd, where_to_write, nbytes, 0);  // Non blocking !
-    printf("Recibi del cliente\n");
     uint8_t state_toret = GREETING_READ; // current state
 
     if(ret > 0) {
@@ -47,18 +46,26 @@ greeting_read(struct selector_key *key) {
         buffer_write_adv(gstm->rb, ret);
         enum greeting_state state = consume_greeting_buffer(gstm->rb, &gstm->greeting_parser);
         if(state == greeting_done || state == greeting_bad_syntax || state == greeting_unsupported_version) {
+            
+            printf("GREETING READ - Read state %d\n",state);
+            
             gstm->method_selected = select_method(gstm->greeting_parser.methods, gstm->greeting_parser.methods_remaining);
-            printf("State: %d\n",state);
+
+
+            //le quiero escribir al cliente!
             if(selector_set_interest_key(key, OP_WRITE) != SELECTOR_SUCCESS) {
                 goto finally;
             }
 
-            greeting_marshall(gstm->wb, gstm->method_selected);
+            if(greeting_marshall(gstm->wb, gstm->method_selected) == -1){
+                printf("GREETING READ - Error en marshall\n");
+                return ERROR_GLOBAL_STATE;
+            }
 
             state_toret = GREETING_WRITE;
 
         } else{
-            printf("No termine de leer\n");
+            printf("GREETING READ - Didn't finish reading\n");
         }
     } else {
         printf("ERROR");
@@ -80,8 +87,10 @@ select_method(uint8_t *methods, uint8_t nmethods) {
     if(methods != NULL) {
         for(uint8_t i = 0; i < nmethods; i++) {
             if(methods[i] == USERNAME_PASSWORD_AUTH) {
+                printf("GREETING READ - Authentication method spotted\n");
                 return methods[i];  // Si el cliente esta dispuesto a usar usr/pass, entonces vamos por ahi
             } else if(methods[i] == NO_AUTHENTICATION_REQUIRED) {
+                printf("GREETING READ - No authentication required!\n");
                 ret = methods[i];  // Si el cliente quiere usar NO_AUTH_REQUIRED, esta bien. Esperamos a ver si hay una mejor opción
             }
         }
@@ -93,12 +102,13 @@ select_method(uint8_t *methods, uint8_t nmethods) {
 
 unsigned
 greeting_write(struct selector_key *key) {
+    printf("GREETING WRITE\n");
     struct greeting_stm *gstm = &ATTACHMENT(key)->client.greeting;
 
     size_t nbytes;
     uint8_t *where_to_read = buffer_read_ptr(gstm->wb, &nbytes);
 
-    ssize_t ret = send(key->fd, where_to_read, nbytes, 0);
+    ssize_t ret = send(key->fd, where_to_read, nbytes, MSG_NOSIGNAL);
 
     uint8_t state_toret = GREETING_WRITE; // current state
     if(ret > 0) {

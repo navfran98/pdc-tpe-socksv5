@@ -74,12 +74,15 @@ greeting_parser_feed(const uint8_t c, struct greeting_parser *p) {
     return p->state;
 }
 
-void
+int
 greeting_marshall(buffer *b, const uint8_t method) {
     size_t space_left_to_write;
     uint8_t *where_to_write_next = buffer_write_ptr(b, &space_left_to_write);
-
+    if(space_left_to_write < 2){
+        return -1;
+    }
     where_to_write_next[0] = SOCKSV5_SUPPORTED_VERSION;
     where_to_write_next[1] = method;
     buffer_write_adv(b, MARSHALL_SPACE);
+    return 2;
 }

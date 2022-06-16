@@ -9,9 +9,9 @@
 #define SOCKSV5_SUPPORTED_VERSION 0x05
 
 // SOCKSv5 METHODS
-#define NO_AUTHENTICATION_REQUIRED        0x00
-#define USERNAME_PASSWORD_AUTH            0x02
-#define NO_ACCEPTABLE_METHODS             0xFF
+static const uint8_t NO_AUTHENTICATION_REQUIRED = 0x00;
+static const uint8_t USERNAME_PASSWORD_AUTH = 0x02;
+static const uint8_t NO_ACCEPTABLE_METHODS = 0xFF;
 
 
 
@@ -46,7 +46,7 @@ enum greeting_state
 greeting_parser_feed(uint8_t c, struct greeting_parser *hp);
 
 
-void
+int
 greeting_marshall(buffer *b, uint8_t method);
 
 
