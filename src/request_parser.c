@@ -135,48 +135,25 @@ request_parser_feed(const uint8_t c, struct request_parser * req_pars) {
 }
 
 void request_marshall(buffer * buff, struct request_parser * req_pars){
-    // size_t space_left;
-    // uint8_t * where_to_write = buffer_write_ptr(buff, &space_left);
-    // int len = floor(log10(abs(req_pars->port)))+1; 
-    // if(req_pars->atyp == 3){
-    //     if(space_left < 6 + req_pars->addr_len + len){
-    //         // return -1;
-    //         return;
-    //     }
-    //     where_to_write[0] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
-    //     where_to_write[1] = req_pars->reply;
-    //     where_to_write[2] = 0x00;
-    //     where_to_write[3] = req_pars->atyp;
-    //     where_to_write[4] = req_pars->addr_len;
-    //     int i = 5;
-    //     for(int j = 0; i < req_pars->addr_len; i++, j++){
-    //         where_to_write[i] = req_pars->addr[j];
-    //     }
-    //     snprintf(where_to_write, len, "%d", req_pars->port);
-    //     buffer_write_adv(buff, i+len);
-    //     // return 2;
-    //     return;
-    // } else {
-    //     if(space_left < 5 + req_pars->addr_len + len){
-    //         // return -1;
-    //         return;
-    //     }
-    //     where_to_write[0] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
-    //     where_to_write[1] = req_pars->reply;
-    //     where_to_write[2] = 0x00;
-    //     where_to_write[3] = req_pars->atyp;
-    //     int i = 4;
-    //     for(int j = 0; i < req_pars->addr_len; i++, j++){
-    //         where_to_write[i] = req_pars->addr[j];
-    //     }
-    //     int len = floor(log10(abs(req_pars->port)))+1; 
-    //     snprintf(where_to_write, len, "%d", req_pars->port);
-    //     buffer_write_adv(buff, i+len);
-    //     // return 2;
-    // }
-    size_t space_left;
-    uint8_t * where_to_write = buffer_write_ptr(buff, &space_left);
-    where_to_write[0] = 0x05;
-    where_to_write[1] = 0x00;
-    buffer_write_adv(buff, 2);
+   size_t space_left_to_write;
+    uint8_t *where_to_write = buffer_write_ptr(buff, &space_left_to_write);
+
+    uint16_t total_space = 10;
+
+    int i = 0;
+
+    where_to_write[i++] = PROXY_SOCKS_REQUEST_SUPPORTED_VERSION;
+    where_to_write[i++] = req_pars->reply;
+    where_to_write[i++] = 0x00;  // RSV
+
+    where_to_write[i++] = REQUEST_THROUGH_IPV4;
+    for(int j = i; j < IPv4_LENGTH + i; j++) {
+        where_to_write[j] = 0x00;   // BIND.ADDR
+    }
+    i += IPv4_LENGTH;
+    where_to_write[i++] = 0x00;  // BIND.PORT
+    where_to_write[i]   = 0x00;  // BIND.PORT
+
+    buffer_write_adv(buff, total_space);
 }
+

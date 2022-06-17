@@ -86,7 +86,8 @@ socksv5_block(struct selector_key *key);
 static const fd_handler socksv5_active_handler = {
         .handle_read = socksv5_read,
         .handle_write = socksv5_write,
-        .handle_timeout = socksv5_timeout 
+        .handle_timeout = socksv5_timeout,
+        .handle_block = socksv5_block,
 };
 
 #endif
