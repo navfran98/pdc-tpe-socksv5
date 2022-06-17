@@ -9,6 +9,7 @@
 #include "../headers/request_stm.h"
 #include "../headers/origin_connect_stm.h"
 #include "../headers/parameters.h"
+#include "../headers/copy_stm.h"
 
 #define MAX_CONCURRENT_CONNECTIONS 500
 #define N(x) (sizeof(x)/sizeof((x)[0]))
@@ -23,7 +24,7 @@ typedef struct socksv5 {
     int client_fd;
     int origin_fd;
 
-    //TODO: chequear si hay q cambiar el tipo
+    //TODO: chequear si hay q cambiar el tipo, o borrarlo?
     char * client_ip;
     uint16_t client_port;
     char * origin_ip;
@@ -38,6 +39,7 @@ typedef struct socksv5 {
         struct greeting_stm greeting;
         struct auth_stm auth;
         struct request_stm request;
+        struct copy_stm copy;
     } client;
 
     struct state_machine stm;

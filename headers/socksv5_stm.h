@@ -142,9 +142,7 @@ enum socksv5_global_state {
 
     ORIGIN_CONNECT,
 
-    RESPONSE_READ,
-
-    RESPONSE_WRITE,
+    COPY,
 
     DONE,
     ERROR_GLOBAL_STATE

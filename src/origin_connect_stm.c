@@ -75,7 +75,6 @@ connect_through_ip(struct selector_key *key){
 
         if(connect(socksv5->origin_fd, (struct sockaddr*)&req_stm->origin_addr_ipv4, sizeof(req_stm->origin_addr_ipv4)) < 0) {
             if(errno == EINPROGRESS) {
-                printf("Olaolaola\n");
                 if(selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS){
                     return ERROR_GLOBAL_STATE;
                 }

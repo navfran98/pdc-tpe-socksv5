@@ -50,10 +50,10 @@ const struct state_definition global_states_definition[] = {
         .on_block_ready = connect_origin_block,
     },
     {
-        .state = RESPONSE_READ,
-    },
-    {
-        .state = RESPONSE_WRITE,
+        .state = COPY,
+        .on_arrival = copy_init,
+        .on_read_ready = copy_read,
+        .on_write_ready = copy_write,
     },
     {
         .state = DONE,

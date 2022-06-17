@@ -89,7 +89,7 @@ request_write(struct selector_key *key) {
                     goto finally;
                 }
                 printf("TENGO QUE IR AL COPY\n");
-                return DONE;
+                return COPY;
             } else {
                 return DONE;
             }
