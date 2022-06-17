@@ -36,3 +36,6 @@ client: $(COFILES)
 
 clean: 
 	rm -rf $(OFILES); rm -rf $(COFILES)
+
+run:
+	make clean; make all; ./socks5d -u coco:coco;
