@@ -96,7 +96,6 @@ request_write(struct selector_key *key) {
                 if(selector_set_interest(key->s, socksv5->origin_fd, OP_READ) != SELECTOR_SUCCESS) {
                     goto finally;
                 }
-                printf("Salto al COPY\n");
                 return COPY;
             } else {
                 return DONE;

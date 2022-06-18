@@ -11,7 +11,7 @@ enum socksv5_global_state
 connect_to_origin(struct selector_key *key, struct request_stm * req_stm);
 
 enum socksv5_global_state
-connect_through_ip(struct selector_key *key);
+connect_through_ip(struct selector_key *key, bool was_fqdn);
 
 enum socksv5_global_state
 connect_through_fqdn(struct selector_key * key);

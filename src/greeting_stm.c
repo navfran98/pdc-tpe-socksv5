@@ -92,7 +92,6 @@ greeting_write(struct selector_key *key) {
     uint8_t * where_to_read = buffer_read_ptr(g_stm->wb, &nbytes);
 
     ssize_t ret = send(key->fd, where_to_read, nbytes, 0);
-    printf("Envié el msg\n");
     uint8_t ret_state = GREETING_WRITE;
     if(ret > 0) {
         buffer_read_adv(g_stm->wb, nbytes);
@@ -101,7 +100,6 @@ greeting_write(struct selector_key *key) {
                 goto finally;
             }
             if(g_stm->method_selected == NO_AUTHENTICATION_REQUIRED) {
-                printf("salto al request\n");
                 ret_state = REQUEST_READ;
             } else if(g_stm->method_selected == USERNAME_PASSWORD_AUTH) {
                 ret_state = AUTH_READ;
