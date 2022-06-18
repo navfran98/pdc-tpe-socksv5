@@ -10,6 +10,8 @@
 #include "../headers/socksv5_stm.h"
 #include "../headers/logger.h"
 
+#include <arpa/inet.h>
+
 unsigned
 connect_origin_init(const unsigned state, struct selector_key *key) {
 
@@ -39,6 +41,8 @@ connect_to_origin(struct selector_key * key, struct request_stm * req_stm) {
 
 enum socksv5_global_state
 connect_through_ip(struct selector_key *key, bool was_fqdn){
+
+    printf("ENTRE AL CONNECT IP\n");
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
 
@@ -52,34 +56,49 @@ connect_through_ip(struct selector_key *key, bool was_fqdn){
     if(selector_fd_set_nio(socksv5->origin_fd) < 0) {
         goto finally;
     }
-
+    printf("REPLU --> %d\n", req_stm->request_parser.reply);
     if(req_stm->request_parser.atyp == REQUEST_THROUGH_IPV4){
+        printf("SOY IPV4\n");
         if(!was_fqdn){
-            //TODO: cargar en origin_addr_ipv4 la q tengo en el parser
             int addr_in_size = sizeof(struct sockaddr_in);
             memset(&req_stm->origin_addr_ipv4, 0, addr_in_size);
+            printf("A D D R   S I Z E  ---> %d\n", addr_in_size);
+            
             req_stm->origin_addr_ipv4.sin_port = htons(req_stm->request_parser.port);
+            printf("P U E R T O ---> %d\n", req_stm->origin_addr_ipv4.sin_port);
+
             req_stm->origin_addr_ipv4.sin_family = AF_INET;
-            memcpy(&req_stm->origin_addr_ipv4.sin_addr, &req_stm->request_parser.addr, req_stm->request_parser.addr_len);
+            printf("F A M I L Y ---> %d\n", (req_stm->origin_addr_ipv4.sin_family == AF_INET ? 4 : -1));
+
+            for(int i = 0; i < req_stm->request_parser.addr_len; i++){
+                ((uint8_t *)&(req_stm->origin_addr_ipv4.sin_addr))[i] = req_stm->request_parser.addr[i];
+            }
         }
+        
         if(connect(socksv5->origin_fd, (struct sockaddr*)&req_stm->origin_addr_ipv4, sizeof(req_stm->origin_addr_ipv4)) < 0) {
             if(errno == EINPROGRESS) {
+                printf("EINPROGRESS\n");
                 if (selector_register(key->s, socksv5->origin_fd, &socksv5_active_handler, OP_WRITE, key->data) != SELECTOR_SUCCESS) {
+                    printf("ERROR\n");
                     return ERROR_GLOBAL_STATE;
                 }
             } else {
+                printf("ELSE DEL EINPROGRESS\n");
                 req_stm->request_parser.reply = HOST_UNREACHABLE;
                 goto finally;
             }
         }
         return ORIGIN_CONNECT;
     }else{
+        printf("SOY IPV6\n");
         if(!was_fqdn){
             int addr_in_size = sizeof(struct sockaddr_in6);
             memset(&req_stm->origin_addr_ipv6, 0, addr_in_size);
             req_stm->origin_addr_ipv6.sin6_port = htons(req_stm->request_parser.port);
             req_stm->origin_addr_ipv6.sin6_family = AF_INET6;
-            memcpy(&req_stm->origin_addr_ipv6.sin6_addr, &req_stm->request_parser.addr, req_stm->request_parser.addr_len);
+            for(int i = 0; i < req_stm->request_parser.addr_len; i++){
+                ((uint8_t *)&(req_stm->origin_addr_ipv6.sin6_addr))[i] = req_stm->request_parser.addr[i];
+            }
         }
 
         if(connect(socksv5->origin_fd, (struct sockaddr*)&req_stm->origin_addr_ipv6, sizeof(req_stm->origin_addr_ipv6)) < 0) {

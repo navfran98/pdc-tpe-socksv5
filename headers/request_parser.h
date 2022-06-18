@@ -44,6 +44,8 @@ struct request_parser {
     int addr_len;
     ssize_t port;
 
+
+
     uint8_t * addr;
     uint8_t addr_index;
     uint8_t reply;
