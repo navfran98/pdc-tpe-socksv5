@@ -29,7 +29,7 @@ greeting_init(const unsigned state, struct selector_key *key) {
 
 unsigned
 greeting_read(struct selector_key *key) {
-    printf("GREETING READ\n");
+    printf("------------\nGREETING READ\n\n");
     struct greeting_stm * g_stm = &ATTACHMENT(key)->client.greeting;
 
 	size_t nbytes;
@@ -53,7 +53,7 @@ greeting_read(struct selector_key *key) {
 
             ret_state = GREETING_WRITE;
         } else{
-            printf("GREETING READ - Didn't finish reading\n");
+            printf("Didn't finish reading\n");
         }
     } else {
         printf("ERROR");
@@ -72,27 +72,27 @@ select_method(uint8_t * methods, uint8_t number_of_methods) {
     if(methods != NULL) {
         for(uint8_t i = 0; i < number_of_methods; i++) {
             if(methods[i] == USERNAME_PASSWORD_AUTH) {
-                printf("GREETING READ - Authentication method spotted\n");
+                printf("Authentication method spotted\n");
                 return methods[i]; 
             } else if(methods[i] == NO_AUTHENTICATION_REQUIRED) {
                 ret = methods[i];
             }
         }
     }
-    printf("GREETING READ - No authentication required!\n");
+    printf("No authentication required!\n");
     return ret;
 }
 
 unsigned
 greeting_write(struct selector_key *key) {
-    printf("GREETING WRITE\n");
+    printf("---------------\nGREETING WRITE\n\n");
     struct greeting_stm *g_stm = &ATTACHMENT(key)->client.greeting;
 
     size_t nbytes;
     uint8_t * where_to_read = buffer_read_ptr(g_stm->wb, &nbytes);
 
     ssize_t ret = send(key->fd, where_to_read, nbytes, 0);
-    printf("GREETING WRITE - Envie el msg\n");
+    printf("Envié el msg\n");
     uint8_t ret_state = GREETING_WRITE;
     if(ret > 0) {
         buffer_read_adv(g_stm->wb, nbytes);
@@ -101,7 +101,7 @@ greeting_write(struct selector_key *key) {
                 goto finally;
             }
             if(g_stm->method_selected == NO_AUTHENTICATION_REQUIRED) {
-                printf("GREETING WRITE - salto al request\n");
+                printf("salto al request\n");
                 ret_state = REQUEST_READ;
             } else if(g_stm->method_selected == USERNAME_PASSWORD_AUTH) {
                 ret_state = AUTH_READ;

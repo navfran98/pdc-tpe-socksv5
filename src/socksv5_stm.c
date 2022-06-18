@@ -48,6 +48,7 @@ const struct state_definition global_states_definition[] = {
         .state = ORIGIN_CONNECT,
         .on_arrival = connect_origin_init,
         .on_block_ready = connect_origin_block,
+        .on_write_ready = verify_connection,
     },
     {
         .state = COPY,

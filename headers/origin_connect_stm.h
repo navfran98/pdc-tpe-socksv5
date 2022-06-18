@@ -20,4 +20,7 @@ void * connect_origin_thread(void * data);
 
 unsigned connect_origin_block(struct selector_key *key);
 
+enum socksv5_global_state
+verify_connection(struct selector_key * key);
+
 #endif

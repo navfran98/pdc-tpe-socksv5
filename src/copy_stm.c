@@ -31,7 +31,6 @@ unsigned copy_init(const unsigned state, struct selector_key * key) {
 
 
 unsigned copy_read(struct selector_key *key) {
-    printf("COPY READ\n");
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct copy_stm * copy_stm = &ATTACHMENT(key)->client.copy;
 
@@ -69,7 +68,6 @@ unsigned copy_read(struct selector_key *key) {
             }
         }
     } else if(ret == 0 || errno == ECONNRESET) {
-        printf("NO RECIBI NADA\n");
         if (shutdown(key->fd, SHUT_RD) < 0) {
                 goto finally;
             }
@@ -101,7 +99,6 @@ finally:
 
 unsigned
 copy_write(struct selector_key *key) {
-    printf("COPY WRITE\n");
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct copy_stm * cp_stm = &ATTACHMENT(key)->client.copy;
 
