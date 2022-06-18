@@ -22,7 +22,6 @@ connect_origin_init(const unsigned state, struct selector_key *key) {
     if(socksv5->origin_fd < 0) {
 		ret_state = connect_to_origin(key, req_stm);
         printf("Vuelvo con estado %d\n", ret_state);
-        //TODO: revisar esta parte de abajo
 	}
     return ret_state;
 }
