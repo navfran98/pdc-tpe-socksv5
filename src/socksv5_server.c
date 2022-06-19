@@ -11,9 +11,7 @@
 #include "../headers/socksv5_server.h"
 #include "../headers/socksv5_stm.h"
 
-static const unsigned max_pool = MAX_CONCURRENT_CONNECTIONS; //TODO: revisar este numero
-static unsigned pool_size = 0;
-static struct socksv5 * pool = 0; 
+static struct socksv5 * first = 0; 
 
 void socksv5_passive_accept(struct selector_key *key) {
 
@@ -23,13 +21,12 @@ void socksv5_passive_accept(struct selector_key *key) {
 
     const int client_sock = accept(key->fd, (struct sockaddr*)&new_client_addr, &new_client_addr_len);
 
-    add_connection();
 
     if(client_sock == -1) {
-        log_new_connection("Client failed to connect");
+        // log_new_connection("Client failed to connect");
         goto finally;
     } else {
-        log_new_connection("Client connected succesfully");
+        // log_new_connection("Client connected succesfully");
     }
 
     if(selector_fd_set_nio(client_sock) == -1) {
@@ -41,109 +38,90 @@ void socksv5_passive_accept(struct selector_key *key) {
         goto finally;
     }
     
-    memcpy(&socksv5->client_ip, &new_client_addr, new_client_addr_len);
+    memcpy(&socksv5->client_addr, &new_client_addr, new_client_addr_len);
 
-    if (get_concurrent_connections() == MAX_CONCURRENT_CONNECTIONS) {
+    if (get_concurrent_connections() > MAX_CONCURRENT_CONNECTIONS) {
         if(selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS)
             goto finally;
     }
 
     if(selector_register(key->s, client_sock, &socksv5_active_handler, OP_READ, socksv5) != SELECTOR_SUCCESS) {
-        remove_connection();
+        //Ocurrio un error
         goto finally;
     }
+
+    add_connection();
 
     return;
 
 finally:
     if(client_sock != -1) {
         close(client_sock);
-        log_new_connection("Client disconnected");
     }
     if(socksv5 != NULL) {
         socksv5_destroy(key->data);
     }
 }
-
 struct socksv5 * new_socksv5(int client_fd) {
-     struct socksv5 * socksv5;
-
-    if (pool == NULL) {
-        socksv5 = malloc(sizeof(*socksv5));
-    } else {
-        socksv5 = pool;
-        pool = pool->next;
-        socksv5->next = 0;
-    }
-
-    if (socksv5 == NULL) {
+    //Creamos la estructura socksv5
+    struct socksv5 * socksv5 = malloc(sizeof(*socksv5));
+    if(socksv5 == NULL){
         goto finally;
     }
 
+    //Lo ubicamos en la lista
+    if (first == NULL) {
+        first = socksv5;
+        socksv5->prev = NULL;
+        socksv5->next = NULL;
+    } else {
+        struct socksv5 * aux = first;
+        while(aux->next != NULL){
+            aux = aux->next;
+        }
+        aux->next = socksv5;
+        socksv5->prev = aux;
+        socksv5->next = NULL;
+    }
+    
+    //Se setean los atributos
     memset(socksv5, 0x00, sizeof(*socksv5));
 
     socksv5->origin_fd = -1;
     socksv5->client_fd = client_fd;
 
-    socksv5->stm.initial   = GREETING_READ;
+    socksv5->stm.initial = GREETING_READ;
     socksv5->stm.max_state = ERROR_GLOBAL_STATE;
-    socksv5->stm.states    = socksv5_describe_states();
+    socksv5->stm.states = socksv5_describe_states();
 
     stm_init(&socksv5->stm);
 
     buffer_init(&socksv5->read_buffer,  N(socksv5->raw_buff_a), socksv5->raw_buff_a);
     buffer_init(&socksv5->write_buffer, N(socksv5->raw_buff_b), socksv5->raw_buff_b);
 
-    socksv5->references = 1;
     finally:
     return socksv5;
 }
-
-
-static void
-socksv5_destroy_(struct socksv5 *s) {
-    free(s);
-    remove_connection();
-}
-
-
-void
-socksv5_destroy(struct socksv5 *s) {
-    if(s == NULL) {
-    } else if(s->references == 1) {
-        if(s != NULL) {
-            if(pool_size < max_pool) {
-                s->next = pool;
-                pool    = s;
-                pool_size++;
-            } else {
-                socksv5_destroy_(s);
-            }
-        }
-    } else {
-        s->references -= 1;
-    }
-}
-
 void
 destroy_socksv5_pool(void) {
-    struct socksv5 * next, * s;
-    for(s = pool; s != NULL ; s = next) {
-        next = s->next;
-        socksv5_destroy(s);
+    struct socksv5 * current = first;
+    struct socksv5 * aux = current;
+
+    while(aux != NULL) {
+        current = aux;
+        aux = aux->next;
+        socksv5_destroy(current);
     }
 }
 
 void
-socksv5_done(struct selector_key *key) {
+socksv5_done(struct selector_key * key) {
+
+    // 1. Cerramos los fd y los desregistramos del selector
     const int fds[] = {
             ATTACHMENT(key)->client_fd,
             ATTACHMENT(key)->origin_fd,
     };
-
-    if (ATTACHMENT(key)->origin_fd != -1) {
-        remove_connection();
-    }
 
     for(unsigned i = 0; i < N(fds); i++) {
         if(fds[i] != -1) {
@@ -153,8 +131,32 @@ socksv5_done(struct selector_key *key) {
             close(fds[i]);
         }
     }
-    log_new_connection("Client disconnected");
+    
+    // 2. Removemos la conexion de las metricas
+    remove_connection();
+    
+    // 3. Lo eliminamos de la lista y eliminamos la estructura
+    socksv5_destroy(ATTACHMENT(key));
+    
 }
+
+void
+socksv5_destroy(struct socksv5 *s) {
+    
+    //Lo saco de la lista
+    if(s->next != NULL){
+        s->next->prev = s->prev;
+    }
+    if(s->prev != NULL){
+        s->prev->next = s->next;
+    } else {
+        first = s->next;
+    } 
+
+    // Elimino la estructura y hago los frees
+    free(s);
+}
+
 
 void
 socksv5_read(struct selector_key *key) {
@@ -163,13 +165,13 @@ socksv5_read(struct selector_key *key) {
     enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_read(stm, key);
 
     if(state == ERROR_GLOBAL_STATE || state == DONE) {
-    socksv5_done(key);
+        socksv5_done(key);
     }
 }
 
 void
 socksv5_write(struct selector_key *key) {
-    struct state_machine *stm  = &ATTACHMENT(key)->stm;
+    struct state_machine * stm  = &ATTACHMENT(key)->stm;
 
     enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_write(stm, key);
 
@@ -180,7 +182,7 @@ socksv5_write(struct selector_key *key) {
 
 void
 socksv5_block(struct selector_key *key) {
-    struct state_machine *stm   = &ATTACHMENT(key)->stm;
+    struct state_machine * stm  = &ATTACHMENT(key)->stm;
     const enum socksv5_global_state state  = (enum socksv5_global_state)stm_handler_block(stm, key);
 
     if(state == ERROR_GLOBAL_STATE || state == DONE) {
@@ -189,8 +191,8 @@ socksv5_block(struct selector_key *key) {
 }
 
 void
-socksv5_timeout(struct selector_key *key) {
-	struct state_machine *stm  = &ATTACHMENT(key)->stm;
+socksv5_timeout(struct selector_key * key) {
+	struct state_machine * stm  = &ATTACHMENT(key)->stm;
 	struct socksv5 * socksv5 = ATTACHMENT(key);
 
 	time(&socksv5->last_update);
@@ -198,8 +200,7 @@ socksv5_timeout(struct selector_key *key) {
 	enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_timeout(stm, key);
 
 	if(state == ERROR_GLOBAL_STATE) {
-		// TODO: habria que hacer un log sobre que hubo un error
-		socksv5_destroy(socksv5);
+		socksv5_done(key);
 	}
 }
 

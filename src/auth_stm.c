@@ -27,7 +27,6 @@ auth_init(const unsigned state, struct selector_key *key){
 
 unsigned
 auth_read(struct selector_key *key) {
-    printf("Entre al auth read\n");
     struct auth_stm * auth_stm = &ATTACHMENT(key)->client.auth;
     struct socksv5 * socksv5 = ATTACHMENT(key);
 
@@ -41,10 +40,8 @@ auth_read(struct selector_key *key) {
     
         enum auth_state state = consume_auth_buffer(auth_stm->rb, &auth_stm->auth_parser);
         if(state == auth_done || state == auth_bad_syntax || state == auth_unsupported_version || state == auth_bad_length) {
-            printf("State: %d\n", state);
             if(state == auth_done){
                 if(authenticate_user(auth_stm->auth_parser.user, auth_stm->auth_parser.password)){
-                    printf("Reconocí al usuario!\n");
                     auth_stm->reply = AUTH_SUCCESS;
                     
                     struct user authenticated_user = {
@@ -73,7 +70,6 @@ finally:
 
 unsigned
 auth_write(struct selector_key *key) {
-    printf("Entré al write de auth\n");
     struct auth_stm *auth_stm = &ATTACHMENT(key)->client.auth;
 
     size_t nbytes;

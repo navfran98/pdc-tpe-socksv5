@@ -20,13 +20,16 @@ struct error_state {
 	int code;
 };
 
+
 typedef struct socksv5 {
     int client_fd;
     int origin_fd;
 
-    //TODO: chequear si hay q cambiar el tipo, o borrarlo?
-    char * client_ip;
-    uint16_t client_port;
+    // char * client_ip;
+    // uint16_t client_port;
+    struct sockaddr_storage client_addr;
+    // socklen_t client_addr_len;
+
     char * origin_ip;
     uint16_t origin_port;
 
@@ -44,46 +47,46 @@ typedef struct socksv5 {
 
     struct state_machine stm;
     struct error_state err;
-    int references;
 
     time_t last_update; 
     struct socksv5 * next;
+    struct socksv5 * prev;
 
     uint8_t raw_buff_a[MAX_BUFF_SIZE], raw_buff_b[MAX_BUFF_SIZE];
     buffer read_buffer, write_buffer;
 } socksv5;
 
-#define ATTACHMENT(key) ( (struct socksv5*)(key)->data)
+#define ATTACHMENT(key) ((struct socksv5*)(key)->data)
 
 struct socksv5 * 
 new_socksv5(int client_fd);
 
 void
-socksv5_passive_accept(struct selector_key *key);
+socksv5_passive_accept(struct selector_key * key);
 
 void
-socksv5_read(struct selector_key *key);
+socksv5_read(struct selector_key * key);
 
 void
-socksv5_write(struct selector_key *key);
+socksv5_write(struct selector_key * key);
 
 void
-socksv5_timeout(struct selector_key *key);
+socksv5_timeout(struct selector_key * key);
 
 void
 destroy_socksv5_pool(void);
 
 void
-socksv5_destroy(struct socksv5 *s);
+socksv5_destroy(struct socksv5 * s);
 
 void
-socksv5_done(struct selector_key *key);
+socksv5_done(struct selector_key * key);
 
 void
-socksv5_close(struct selector_key *key);
+socksv5_close(struct selector_key * key);
 
 void
-socksv5_block(struct selector_key *key);
+socksv5_block(struct selector_key * key);
 
 static const fd_handler socksv5_active_handler = {
         .handle_read = socksv5_read,

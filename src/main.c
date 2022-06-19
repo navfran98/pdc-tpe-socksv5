@@ -172,7 +172,7 @@ finally:
     }
 
     destroy_socksv5_pool(); 
-    logger_destroy();
+    // logger_destroy();
     // free(parameters->pass);
     // free(parameters->user);
 

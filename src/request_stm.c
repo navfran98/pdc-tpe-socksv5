@@ -16,7 +16,6 @@
 
 unsigned
 request_read_init(const unsigned state, struct selector_key *key) {
-    printf("-------------------\nREQUEST INIT\n\n");
 	struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
 
     req_stm->rb = &(ATTACHMENT(key)->read_buffer);
@@ -36,7 +35,6 @@ finally:
 
 unsigned
 request_read(struct selector_key *key) {
-    printf("---------------------------\nREQUEST READ\n\n");
     struct request_stm *req_stm = &ATTACHMENT(key)->client.request;
 
     size_t nbytes;
@@ -48,13 +46,6 @@ request_read(struct selector_key *key) {
         buffer_write_adv(req_stm->rb, ret);
         enum request_state state = consume_request_buffer(req_stm->rb, &req_stm->request_parser);
         if(state == request_done) {
-
-            printf("ATYP: %d\nREPLY: %u\nADDR_LEN: %d\nADDR: ",req_stm->request_parser.atyp, req_stm->request_parser.reply, req_stm->request_parser.addr_len);
-
-            for(int i = 0; i < req_stm->request_parser.addr_len; i++){
-                printf("%u", req_stm->request_parser.addr[i]);
-            }
-            printf("\n");
             
             if(selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS) {
                 goto finally;
@@ -76,7 +67,6 @@ finally:
 
 unsigned
 request_write(struct selector_key *key) {
-    printf("-----------------------------\nREQUEST WRITE\n\n");
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
 
@@ -106,7 +96,6 @@ request_write(struct selector_key *key) {
     } else {
         goto finally;
     }
-
 finally:
     return ERROR_GLOBAL_STATE;
 }

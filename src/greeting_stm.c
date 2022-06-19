@@ -29,7 +29,6 @@ greeting_init(const unsigned state, struct selector_key *key) {
 
 unsigned
 greeting_read(struct selector_key *key) {
-    printf("------------\nGREETING READ\n\n");
     struct greeting_stm * g_stm = &ATTACHMENT(key)->client.greeting;
 
 	size_t nbytes;
@@ -53,10 +52,8 @@ greeting_read(struct selector_key *key) {
 
             ret_state = GREETING_WRITE;
         } else{
-            printf("Didn't finish reading\n");
         }
     } else {
-        printf("ERROR");
         goto finally;
     }
     return ret_state;
@@ -72,20 +69,17 @@ select_method(uint8_t * methods, uint8_t number_of_methods) {
     if(methods != NULL) {
         for(uint8_t i = 0; i < number_of_methods; i++) {
             if(methods[i] == USERNAME_PASSWORD_AUTH) {
-                printf("Authentication method spotted\n");
                 return methods[i]; 
             } else if(methods[i] == NO_AUTHENTICATION_REQUIRED) {
                 ret = methods[i];
             }
         }
     }
-    printf("No authentication required!\n");
     return ret;
 }
 
 unsigned
 greeting_write(struct selector_key *key) {
-    printf("---------------\nGREETING WRITE\n\n");
     struct greeting_stm *g_stm = &ATTACHMENT(key)->client.greeting;
 
     size_t nbytes;
