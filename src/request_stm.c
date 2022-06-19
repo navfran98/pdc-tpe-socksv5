@@ -16,7 +16,7 @@
 
 unsigned
 request_read_init(const unsigned state, struct selector_key *key) {
-	struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
+	struct request_stm * req_stm = &ATTACHMENT(key)->request;
 
     req_stm->rb = &(ATTACHMENT(key)->read_buffer);
     req_stm->wb = &(ATTACHMENT(key)->write_buffer);
@@ -35,7 +35,7 @@ finally:
 
 unsigned
 request_read(struct selector_key *key) {
-    struct request_stm *req_stm = &ATTACHMENT(key)->client.request;
+    struct request_stm *req_stm = &ATTACHMENT(key)->request;
 
     size_t nbytes;
     uint8_t * where_to_write = buffer_write_ptr(req_stm->rb, &nbytes);
@@ -68,7 +68,7 @@ finally:
 unsigned
 request_write(struct selector_key *key) {
     struct socksv5 * socksv5 = ATTACHMENT(key);
-    struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
+    struct request_stm * req_stm = &ATTACHMENT(key)->request;
 
     request_marshall(req_stm->wb, &req_stm->request_parser);
 

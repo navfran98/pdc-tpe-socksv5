@@ -11,7 +11,7 @@
 #include "../headers/socksv5_server.h"
 #include "../headers/socksv5_stm.h"
 
-static struct socksv5 * first = 0; 
+static struct socksv5 * first = NULL; 
 
 void socksv5_passive_accept(struct selector_key *key) {
 
@@ -64,7 +64,7 @@ finally:
 }
 struct socksv5 * new_socksv5(int client_fd) {
     //Creamos la estructura socksv5
-    struct socksv5 * socksv5 = malloc(sizeof(*socksv5));
+    struct socksv5 * socksv5 = calloc(1,sizeof(*socksv5));
     if(socksv5 == NULL){
         goto finally;
     }
@@ -85,7 +85,7 @@ struct socksv5 * new_socksv5(int client_fd) {
     }
     
     //Se setean los atributos
-    memset(socksv5, 0x00, sizeof(*socksv5));
+    memset(socksv5, 0x00, sizeof(struct socksv5));
 
     socksv5->origin_fd = -1;
     socksv5->client_fd = client_fd;
@@ -93,6 +93,7 @@ struct socksv5 * new_socksv5(int client_fd) {
     socksv5->stm.initial = GREETING_READ;
     socksv5->stm.max_state = ERROR_GLOBAL_STATE;
     socksv5->stm.states = socksv5_describe_states();
+
 
     stm_init(&socksv5->stm);
 
@@ -102,6 +103,7 @@ struct socksv5 * new_socksv5(int client_fd) {
     finally:
     return socksv5;
 }
+
 void
 destroy_socksv5_pool(void) {
     struct socksv5 * current = first;
@@ -111,6 +113,7 @@ destroy_socksv5_pool(void) {
         current = aux;
         aux = aux->next;
         socksv5_destroy(current);
+        free(current);
     }
 }
 
@@ -144,17 +147,18 @@ void
 socksv5_destroy(struct socksv5 *s) {
     
     //Lo saco de la lista
-    if(s->next != NULL){
-        s->next->prev = s->prev;
-    }
-    if(s->prev != NULL){
-        s->prev->next = s->next;
-    } else {
-        first = s->next;
-    } 
+    if(s != NULL){
+        if(s->next != NULL){
+            s->next->prev = s->prev;
+        }
+        if(s->prev != NULL){
+            s->prev->next = s->next;
+        } else {
+            first = s->next;
+        } 
 
-    // Elimino la estructura y hago los frees
-    free(s);
+        // Elimino la estructura y hago los frees
+    }
 }
 
 
@@ -201,6 +205,6 @@ socksv5_timeout(struct selector_key * key) {
 
 	if(state == ERROR_GLOBAL_STATE) {
 		socksv5_done(key);
-	}
+    }
 }
 

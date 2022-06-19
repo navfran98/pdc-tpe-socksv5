@@ -19,9 +19,10 @@ static void sniff_pop3(struct selector_key *key, uint8_t * ptr, ssize_t size);
 static enum socksv5_global_state check_close_connection(struct selector_key * key, struct copy_stm * cp_stm);
 
 unsigned copy_init(const unsigned state, struct selector_key * key) {
-    struct copy_stm * cp_stm = &ATTACHMENT(key)->client.copy;
-
+    struct copy_stm * cp_stm = &ATTACHMENT(key)->copy;
+    printf("ATYP1: %d\n",ATTACHMENT(key)->request.request_parser.atyp );
     cp_stm->rb = &(ATTACHMENT(key)->read_buffer);
+    printf("ATYP2: %d\n",ATTACHMENT(key)->request.request_parser.atyp );
     cp_stm->wb = &(ATTACHMENT(key)->write_buffer);
     
     cp_stm->reading_client = true;
@@ -37,7 +38,7 @@ unsigned copy_init(const unsigned state, struct selector_key * key) {
 
 unsigned copy_read(struct selector_key *key) {
     struct socksv5 * socksv5 = ATTACHMENT(key);
-    struct copy_stm * copy_stm = &ATTACHMENT(key)->client.copy;
+    struct copy_stm * copy_stm = &ATTACHMENT(key)->copy;
 
     buffer * buff;
     uint8_t fd_target;
@@ -69,7 +70,6 @@ unsigned copy_read(struct selector_key *key) {
             sniff_pop3(key,where_to_write,ret);
         }
 
-        printf("RECIBI -> %u bytes\n", ret);
         buffer_write_adv(buff, ret);
 
         if(selector_set_interest_reduction(key->s, key->fd, OP_READ) != SELECTOR_SUCCESS) {
@@ -112,7 +112,7 @@ finally:
 unsigned
 copy_write(struct selector_key *key) {
     struct socksv5 * socksv5 = ATTACHMENT(key);
-    struct copy_stm * cp_stm = &ATTACHMENT(key)->client.copy;
+    struct copy_stm * cp_stm = &ATTACHMENT(key)->copy;
 
     buffer * buff;
     uint8_t fd_target;
@@ -177,7 +177,7 @@ finally:
 
 static enum socksv5_global_state check_close_connection(struct selector_key * key, struct copy_stm * cp_stm) {
     if(cp_stm->reading_client == false && cp_stm->reading_origin == false && cp_stm->writing_origin == false && cp_stm->writing_client == false) {
-        printf("ATYP -> %d\n", ATTACHMENT(key)->client.request.request_parser.atyp);
+        printf("ATYP -> %d\n", ATTACHMENT(key)->request.request_parser.atyp);
         log_new_connection("Client disconnected", key);
         return DONE;
     }

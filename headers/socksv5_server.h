@@ -29,22 +29,20 @@ typedef struct socksv5 {
     // char * client_ip;
     // uint16_t client_port;
     struct sockaddr_storage client_addr;
-    // socklen_t client_addr_len;
+    //socklen_t client_addr_len;
 
-    char * origin_ip;
-    uint16_t origin_port;
+    //char * origin_ip;
+    //uint16_t origin_port;
 
     struct addrinfo * origin_resolution;
     struct addrinfo * origin_resolution_current;
 
     struct user connected_user;
-
-    union {
-        struct greeting_stm greeting;
-        struct auth_stm auth;
-        struct request_stm request;
-        struct copy_stm copy;
-    } client;
+    
+    struct greeting_stm greeting;
+    struct auth_stm auth;
+    struct request_stm request;
+    struct copy_stm copy;
 
     struct state_machine stm;
     struct error_state err;

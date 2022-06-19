@@ -16,7 +16,7 @@ unsigned
 connect_origin_init(const unsigned state, struct selector_key *key) {
 
 	struct socksv5 * socksv5 = ATTACHMENT(key);
-	struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
+	struct request_stm * req_stm = &ATTACHMENT(key)->request;
 
 	unsigned ret_state = state;
 
@@ -40,7 +40,7 @@ enum socksv5_global_state
 connect_through_ip(struct selector_key *key, bool was_fqdn){
 
     struct socksv5 * socksv5 = ATTACHMENT(key);
-    struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
+    struct request_stm * req_stm = &ATTACHMENT(key)->request;
 
     if(req_stm->request_parser.atyp == REQUEST_THROUGH_IPV4)
         socksv5->origin_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -130,7 +130,7 @@ connect_through_fqdn(struct selector_key * key){
 void * connect_origin_thread(void *data) {
     struct selector_key * key = (struct selector_key *) data;
     struct socksv5 * socksv5 = ATTACHMENT(key);
-    struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
+    struct request_stm * req_stm = &ATTACHMENT(key)->request;
 
     pthread_detach(pthread_self());
     socksv5->origin_resolution = 0;
@@ -151,7 +151,7 @@ void * connect_origin_thread(void *data) {
         fprintf(stderr, "Domain name resolution error\n"); 
     }
     selector_notify_block(key->s, key->fd);
-    free(data);
+    //free(data);
     
     return 0;
 }
@@ -159,7 +159,7 @@ void * connect_origin_thread(void *data) {
 
  unsigned connect_origin_block(struct selector_key *key) {
     struct socksv5 * socksv5 =  ATTACHMENT(key);
-    struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
+    struct request_stm * req_stm = &ATTACHMENT(key)->request;
 
     enum socksv5_global_state ret = ORIGIN_CONNECT;
 
@@ -204,7 +204,7 @@ enum socksv5_global_state
 verify_connection(struct selector_key * key) {
     struct socksv5 * socksv5 = ATTACHMENT(key);
 
-    struct request_stm * req_stm = &ATTACHMENT(key)->client.request;
+    struct request_stm * req_stm = &ATTACHMENT(key)->request;
     unsigned int error_type = 1, error_len = sizeof(error_type);
     if( getsockopt(socksv5->origin_fd, SOL_SOCKET, SO_ERROR, &error_type, &error_len)!= 0){
         return ERROR_GLOBAL_STATE;

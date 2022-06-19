@@ -69,16 +69,16 @@ void log_new_connection(char * msg, struct selector_key * key){
     strftime(time_str, n, "%FT %TZ", gmtime(&now));
 
     // 2. Armo el string con los datos de la conexión
-    int atyp = socksv5->client.request.request_parser.atyp;
+    int atyp = socksv5->request.request_parser.atyp;
     ssize_t client_port = htons(((struct sockaddr_in*)&socksv5->client_addr)->sin_port);
-    ssize_t origin_port = htons(socksv5->client.request.origin_addr_ipv4.sin_port);
+    ssize_t origin_port = htons(socksv5->request.origin_addr_ipv4.sin_port);
     
     if(atyp == REQUEST_THROUGH_IPV4){
         char * client_address = malloc(16*sizeof(char));
         char * origin_address = malloc(16*sizeof(char));
         struct in_addr client_ad = ((struct sockaddr_in *)&socksv5->client_addr)->sin_addr;
         strcpy(client_address, inet_ntoa(client_ad));
-        struct in_addr orig_ad = socksv5->client.request.origin_addr_ipv4.sin_addr;
+        struct in_addr orig_ad = socksv5->request.origin_addr_ipv4.sin_addr;
         strcpy(origin_address,inet_ntoa(orig_ad));
         if(socksv5->connected_user.name != NULL){
             char * username = socksv5->connected_user.name;
@@ -93,7 +93,7 @@ void log_new_connection(char * msg, struct selector_key * key){
         char * origin_address = malloc(64*sizeof(char));
         struct in6_addr client_ad = ((struct sockaddr_in6*)&socksv5->client_addr)->sin6_addr;
         ipv6_expander(&client_ad, client_address);
-        struct in6_addr orig_ad = socksv5->client.request.origin_addr_ipv6.sin6_addr;
+        struct in6_addr orig_ad = socksv5->request.origin_addr_ipv6.sin6_addr;
         ipv6_expander(&orig_ad, origin_address);
         
         if(socksv5->connected_user.name != NULL){

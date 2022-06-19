@@ -14,7 +14,7 @@
 
 unsigned
 auth_init(const unsigned state, struct selector_key *key){
-    struct auth_stm * auth_stm = &ATTACHMENT(key)->client.auth;
+    struct auth_stm * auth_stm = &ATTACHMENT(key)->auth;
 
     auth_stm->rb = &(ATTACHMENT(key)->read_buffer);
     auth_stm->wb = &(ATTACHMENT(key)->write_buffer);
@@ -27,7 +27,7 @@ auth_init(const unsigned state, struct selector_key *key){
 
 unsigned
 auth_read(struct selector_key *key) {
-    struct auth_stm * auth_stm = &ATTACHMENT(key)->client.auth;
+    struct auth_stm * auth_stm = &ATTACHMENT(key)->auth;
     struct socksv5 * socksv5 = ATTACHMENT(key);
 
     size_t nbytes;
@@ -70,7 +70,7 @@ finally:
 
 unsigned
 auth_write(struct selector_key *key) {
-    struct auth_stm *auth_stm = &ATTACHMENT(key)->client.auth;
+    struct auth_stm *auth_stm = &ATTACHMENT(key)->auth;
 
     size_t nbytes;
     uint8_t * where_to_read = buffer_read_ptr(auth_stm->wb, &nbytes);
