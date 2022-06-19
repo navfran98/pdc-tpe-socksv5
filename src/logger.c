@@ -36,7 +36,7 @@ void log_new_connection(char * msg, struct selector_key * key){
     time_t now = 0;
     time(&now);
 
-    strftime(time_str, n, "%FT %TZ", gmtime(&now));
+    strftime(time_str, n, "%F %T", gmtime(&now));
 
     // 2. Armo el string con los datos de la conexión y lo printeo
     int atyp = socksv5->request.request_parser.atyp;

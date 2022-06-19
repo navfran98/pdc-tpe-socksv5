@@ -1,0 +1,1 @@
+// Aca se define los distintos metodos que se llaman desde cada estado
