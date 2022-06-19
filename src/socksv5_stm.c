@@ -19,8 +19,7 @@ const struct state_definition global_states_definition[] = {
     {
         .state = GREETING_READ,
         .on_arrival     = greeting_init,
-        .on_read_ready  = greeting_read,
-        
+        .on_read_ready  = greeting_read,  
     },
     {
         .state = GREETING_WRITE,
@@ -60,7 +59,7 @@ const struct state_definition global_states_definition[] = {
         .state = DONE,
     },
     {
-        .state = ERROR_GLOBAL_STATE,
+        .state = ERROR,
     },
 };
 

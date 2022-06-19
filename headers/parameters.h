@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define MAX_USERS 10
-#define MAX_ADMINS 2
+#define MAX_ADMINS 1
 
 struct user {
     char *name;
@@ -22,7 +22,7 @@ struct params {
     char * mng_ipv6;
     unsigned short mng_port;
 
-    //Opción para habilitar sniffing
+    //Opción para habilitar pop3 sniffing
     bool disectors_enabled;
 
     struct user users[MAX_USERS];
@@ -38,8 +38,7 @@ void parse_args(int argc, char **argv);
 
 extern params parameters;
 
-
-bool authenticate_user(uint8_t * usr, uint8_t * password);
-bool authenticate_admin(uint8_t * usr, uint8_t * password);
+bool authenticate_user(uint8_t * username, uint8_t * password);
+bool authenticate_admin(uint8_t * username, uint8_t * password);
 
 #endif

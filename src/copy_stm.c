@@ -15,14 +15,12 @@
 #include "../headers/parameters.h"
 #include "../headers/pop3_sniffer.h"
 
-static void sniff_pop3(struct selector_key *key, uint8_t * ptr, ssize_t size);
+static void sniff_pop3(struct selector_key * key, uint8_t * ptr, ssize_t size);
 static enum socksv5_global_state check_close_connection(struct selector_key * key, struct copy_stm * cp_stm);
 
 unsigned copy_init(const unsigned state, struct selector_key * key) {
     struct copy_stm * cp_stm = &ATTACHMENT(key)->copy;
-    printf("ATYP1: %d\n",ATTACHMENT(key)->request.request_parser.atyp );
     cp_stm->rb = &(ATTACHMENT(key)->read_buffer);
-    printf("ATYP2: %d\n",ATTACHMENT(key)->request.request_parser.atyp );
     cp_stm->wb = &(ATTACHMENT(key)->write_buffer);
     
     cp_stm->reading_client = true;
@@ -32,8 +30,6 @@ unsigned copy_init(const unsigned state, struct selector_key * key) {
 
     return state;
 }
-
-
 
 
 unsigned copy_read(struct selector_key *key) {
@@ -105,7 +101,7 @@ unsigned copy_read(struct selector_key *key) {
     }
     return check_close_connection(key, copy_stm);
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }
 
 
@@ -116,9 +112,6 @@ copy_write(struct selector_key *key) {
 
     buffer * buff;
     uint8_t fd_target;
-
-    
-    
 
     if(key->fd == socksv5->client_fd){
         // Estamos escribiendo al cliente
@@ -172,12 +165,11 @@ copy_write(struct selector_key *key) {
         goto finally;
     }
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }
 
 static enum socksv5_global_state check_close_connection(struct selector_key * key, struct copy_stm * cp_stm) {
     if(cp_stm->reading_client == false && cp_stm->reading_origin == false && cp_stm->writing_origin == false && cp_stm->writing_client == false) {
-        printf("ATYP -> %d\n", ATTACHMENT(key)->request.request_parser.atyp);
         log_new_connection("Client disconnected", key);
         return DONE;
     }

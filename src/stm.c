@@ -104,8 +104,6 @@ stm_handler_timeout(struct state_machine *stm, struct selector_key *key){
 
 unsigned
 stm_handler_block(struct state_machine *stm, struct selector_key *key) {
-
-    printf("Entré al handle block!\n");
     const unsigned first = handle_first(stm, key);
     if(first != stm->current->state) {
         // Hubo un error al intentar inicializar el estado

@@ -52,7 +52,6 @@ static void user(char * s, struct user * user) {
         user->name = name;
         user->pass = pass;
     }
-
 }
 
 
@@ -85,9 +84,9 @@ parse_args(const int argc, char **argv) {
     parameters->socksv5_ipv6 = SOCKS_ADDR_IPV6;
     parameters->socksv5_port = SOCKS_PORT;
 
-    parameters->mng_ipv4 = MANAGER_ADDR_IPV4;
-    parameters->mng_ipv6 = MANAGER_ADDR_IPV6;
-    parameters->mng_port = MANAGER_PORT;
+    parameters->mng_ipv4 = ADMIN_ADDR_IPV4;
+    parameters->mng_ipv6 = ADMIN_ADDR_IPV6;
+    parameters->mng_port = ADMIN_PORT;
 
     parameters->disectors_enabled = DISECTORS_ENABLED;
 

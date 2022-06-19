@@ -15,8 +15,6 @@ struct request_stm {
 
     struct sockaddr_in  origin_addr_ipv4;
     struct sockaddr_in6 origin_addr_ipv6;
-    struct addrinfo * origin_addrinfo; 
-
 };
 
 unsigned

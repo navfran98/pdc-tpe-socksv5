@@ -12,8 +12,6 @@
 #include "../headers/socksv5_stm.h"
 #include "../headers/logger.h"
 
-#define ENOUGH_SPACE_TO_CONNECTION_LOG 200
-
 unsigned
 request_read_init(const unsigned state, struct selector_key *key) {
 	struct request_stm * req_stm = &ATTACHMENT(key)->request;
@@ -23,13 +21,9 @@ request_read_init(const unsigned state, struct selector_key *key) {
 
     request_parser_init(&req_stm->request_parser);
 
-    req_stm->origin_addrinfo = calloc(1, sizeof(struct addrinfo));
-    if(req_stm->origin_addrinfo == NULL) {
-        goto finally;
-    }
     return state;
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }
 
 
@@ -62,7 +56,7 @@ request_read(struct selector_key *key) {
     }
     return ret_state;
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }
 
 unsigned
@@ -70,7 +64,7 @@ request_write(struct selector_key *key) {
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct request_stm * req_stm = &ATTACHMENT(key)->request;
 
-    request_marshall(req_stm->wb, &req_stm->request_parser);
+    request_fill_msg(req_stm->wb, &req_stm->request_parser);
 
     size_t nbytes;
     uint8_t * where_to_read = buffer_read_ptr(req_stm->wb, &nbytes);
@@ -97,5 +91,5 @@ request_write(struct selector_key *key) {
         goto finally;
     }
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }

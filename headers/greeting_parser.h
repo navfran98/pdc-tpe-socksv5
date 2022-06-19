@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "buffer.h"
 
-#define MARSHALL_SPACE 2
+#define MSG_SPACE 2
 #define SOCKSV5_SUPPORTED_VERSION 0x05
 
 static const uint8_t NO_AUTHENTICATION_REQUIRED = 0x00;

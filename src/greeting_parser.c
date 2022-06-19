@@ -74,6 +74,6 @@ greeting_marshall(buffer * buff, const uint8_t method) {
     }
     where_to_write[0] = SOCKSV5_SUPPORTED_VERSION;
     where_to_write[1] = method;
-    buffer_write_adv(buff, MARSHALL_SPACE);
+    buffer_write_adv(buff, MSG_SPACE);
     return 2;
 }

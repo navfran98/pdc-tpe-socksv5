@@ -96,11 +96,11 @@ auth_parser_feed(const uint8_t c, struct auth_parser * pars) {
 }
 
 void
-auth_marshall(buffer * buff, const uint8_t code) {
+auth_fill_msg(buffer * buff, const uint8_t code) {
     size_t space_left;
     uint8_t * where_to_write = buffer_write_ptr(buff, &space_left);
 
     where_to_write[0] = SUPPORTED_VERSION;
     where_to_write[1] = code;
-    buffer_write_adv(buff, MARSHALL_SPACE);
+    buffer_write_adv(buff, MSG_SPACE);
 }

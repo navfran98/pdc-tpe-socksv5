@@ -4,14 +4,6 @@
 
 #include "../headers/stm.h"
 
-// Estados
-// 1. Client Greeting
-// 2. Server greeting analysis (si la VER != 5 chau, si nos piden otra cosa que no sea U/P chau)
-//  . Method selection msg (en nuestro caso le decimos que usamos U/P)
-// 3. Client auth request msg (nos envian las credenciales de usr)
-// 4. Analisamos si es correcta el usr y la contra
-//  . Server greeting response (OK ==> se conecta / NOK ==> chau conexion)
-
 enum socksv5_global_state {
 
     ///////////////////////////////////////////////////////////////////
@@ -115,7 +107,8 @@ enum socksv5_global_state {
     COPY,
 
     DONE,
-    ERROR_GLOBAL_STATE
+
+    ERROR
 };
 
 const struct state_definition * socksv5_describe_states(void);

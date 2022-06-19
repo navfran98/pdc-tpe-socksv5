@@ -174,9 +174,7 @@ enum pop3_sniffer_state parse_pop3_sniffer(struct pop3_sniffer* sniffer, uint8_t
     return sniffer->state;
 }
 
-
 enum pop3_sniffer_state pop3_sniffer_consume(struct pop3_sniffer * sniffer){
-
     while(buffer_can_read(&sniffer->buffer) && sniffer->state != POP3_FINISH && sniffer->state != POP3_SNIFF_SUCCESSFUL){
         uint8_t ch = buffer_read(&sniffer->buffer);
         parse_pop3_sniffer(sniffer, ch);

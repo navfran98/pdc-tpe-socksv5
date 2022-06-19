@@ -28,7 +28,7 @@ connect_origin_init(const unsigned state, struct selector_key *key) {
 
 enum socksv5_global_state
 connect_to_origin(struct selector_key * key, struct request_stm * req_stm) {
-    if(req_stm->request_parser.atyp == REQUEST_THROUGH_IPV4 || req_stm->request_parser.atyp == REQUEST_THROUGH_IPV6){
+    if(req_stm->request_parser.atyp == IPV4 || req_stm->request_parser.atyp == IPV6){
         return connect_through_ip(key, false);
     }
     else{
@@ -42,7 +42,7 @@ connect_through_ip(struct selector_key *key, bool was_fqdn){
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct request_stm * req_stm = &ATTACHMENT(key)->request;
 
-    if(req_stm->request_parser.atyp == REQUEST_THROUGH_IPV4)
+    if(req_stm->request_parser.atyp == IPV4)
         socksv5->origin_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     else
         socksv5->origin_fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
@@ -52,13 +52,12 @@ connect_through_ip(struct selector_key *key, bool was_fqdn){
     if(selector_fd_set_nio(socksv5->origin_fd) < 0) {
         goto finally;
     }
-    if(req_stm->request_parser.atyp == REQUEST_THROUGH_IPV4){
+    if(req_stm->request_parser.atyp == IPV4){
         if(!was_fqdn){
             int addr_in_size = sizeof(struct sockaddr_in);
             memset(&req_stm->origin_addr_ipv4, 0, addr_in_size);
             
             req_stm->origin_addr_ipv4.sin_port = htons(req_stm->request_parser.port);
-
             req_stm->origin_addr_ipv4.sin_family = AF_INET;
 
             for(int i = 0; i < req_stm->request_parser.addr_len; i++){
@@ -69,7 +68,7 @@ connect_through_ip(struct selector_key *key, bool was_fqdn){
         if(connect(socksv5->origin_fd, (struct sockaddr*)&req_stm->origin_addr_ipv4, sizeof(req_stm->origin_addr_ipv4)) < 0) {
             if(errno == EINPROGRESS) {
                 if (selector_register(key->s, socksv5->origin_fd, &socksv5_active_handler, OP_WRITE, key->data) != SELECTOR_SUCCESS) {
-                    return ERROR_GLOBAL_STATE;
+                    return ERROR;
                 }
             } else {
                 req_stm->request_parser.reply = HOST_UNREACHABLE;
@@ -91,7 +90,7 @@ connect_through_ip(struct selector_key *key, bool was_fqdn){
         if(connect(socksv5->origin_fd, (struct sockaddr*)&req_stm->origin_addr_ipv6, sizeof(req_stm->origin_addr_ipv6)) < 0) {
             if(errno == EINPROGRESS) {
                 if (selector_register(key->s, socksv5->origin_fd, &socksv5_active_handler, OP_WRITE, key->data) != SELECTOR_SUCCESS) {
-                    return ERROR_GLOBAL_STATE;
+                    return ERROR;
                 }
             } else {
                 req_stm->request_parser.reply = HOST_UNREACHABLE;
@@ -103,7 +102,7 @@ connect_through_ip(struct selector_key *key, bool was_fqdn){
 finally:
     ;
     if(selector_set_interest_key(key, OP_WRITE) != SELECTOR_SUCCESS){
-        return ERROR_GLOBAL_STATE;
+        return ERROR;
     }
     return REQUEST_WRITE;
 }
@@ -115,11 +114,11 @@ connect_through_fqdn(struct selector_key * key){
     enum socksv5_global_state ret = ORIGIN_CONNECT;
 
     if(k == NULL) {
-        ret = ERROR_GLOBAL_STATE;
+        ret = ERROR;
     } else {
         memcpy(k, key, sizeof(*k));
         if((pthread_create(&tid, 0, connect_origin_thread, k)) == -1) {
-            ret = ERROR_GLOBAL_STATE;
+            ret = ERROR;
         }else{
             selector_set_interest_key(key, OP_NOOP);
         }
@@ -170,22 +169,19 @@ void * connect_origin_thread(void *data) {
     
     while(socksv5->origin_resolution_current != NULL){
         if(socksv5->origin_resolution_current->ai_family == AF_INET){
-            req_stm->request_parser.atyp = REQUEST_THROUGH_IPV4;
+            req_stm->request_parser.atyp = IPV4;
             memcpy(&req_stm->origin_addr_ipv4, socksv5->origin_resolution_current->ai_addr, socksv5->origin_resolution_current->ai_addrlen);
         }else if(socksv5->origin_resolution_current->ai_family == AF_INET6){
-            req_stm->request_parser.atyp = REQUEST_THROUGH_IPV6;
+            req_stm->request_parser.atyp = IPV6;
             memcpy(&req_stm->origin_addr_ipv6, socksv5->origin_resolution_current->ai_addr, socksv5->origin_resolution_current->ai_addrlen);
         }
-        //req_stm->request_parser.addr_len = socksv5->origin_resolution_current->ai_addrlen;
-        //memcpy(&req_stm->origin_addr_ipv4, socksv5->origin_resolution_current->ai_addr, socksv5->origin_resolution_current->ai_addrlen);
-        
         if((ret=connect_through_ip(key, true)) == ORIGIN_CONNECT ){
             freeaddrinfo(socksv5->origin_resolution);
             socksv5->origin_resolution = 0;
             return ret;
         }
-        if(ret == ERROR_GLOBAL_STATE){
-            return ERROR_GLOBAL_STATE;
+        if(ret == ERROR){
+            return ERROR;
         }
         socksv5->origin_resolution_current = socksv5->origin_resolution_current->ai_next;
     }
@@ -193,7 +189,7 @@ void * connect_origin_thread(void *data) {
     socksv5->origin_resolution = 0;
 finally:
     if (selector_set_interest(key->s, socksv5->client_fd, OP_WRITE) != SELECTOR_SUCCESS) {
-        return ERROR_GLOBAL_STATE;
+        return ERROR;
     }
     req_stm->request_parser.reply = HOST_UNREACHABLE;
     return REQUEST_WRITE;
@@ -207,7 +203,7 @@ verify_connection(struct selector_key * key) {
     struct request_stm * req_stm = &ATTACHMENT(key)->request;
     unsigned int error_type = 1, error_len = sizeof(error_type);
     if( getsockopt(socksv5->origin_fd, SOL_SOCKET, SO_ERROR, &error_type, &error_len)!= 0){
-        return ERROR_GLOBAL_STATE;
+        return ERROR;
     }
     if ( error_type != 0) {
         if(error_type == ECONNREFUSED) {
@@ -222,10 +218,10 @@ verify_connection(struct selector_key * key) {
         goto finally;
     } else if (error_type == 0) {
             if(selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS){
-                return ERROR_GLOBAL_STATE;
+                return ERROR;
             }
             if(selector_set_interest(key->s, socksv5->client_fd, OP_WRITE) != SELECTOR_SUCCESS){
-                return ERROR_GLOBAL_STATE;
+                return ERROR;
             }
             log_new_connection("Client connected succesfully", key);
             req_stm->request_parser.reply = SUCCEDED;
@@ -235,10 +231,10 @@ verify_connection(struct selector_key * key) {
     }
 finally:
     if (selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS) {
-        return ERROR_GLOBAL_STATE;
+        return ERROR;
     }
     if(selector_set_interest(key->s, socksv5->client_fd, OP_WRITE) != SELECTOR_SUCCESS) {
-        return ERROR_GLOBAL_STATE;
+        return ERROR;
     }
     return REQUEST_WRITE;
 }

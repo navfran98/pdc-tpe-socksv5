@@ -12,12 +12,12 @@ enum socket_errors {
 };
 
 static const char * socket_error_description[] = {
-        "Error in socket()",
-        "Error in bind()",
-        "Error in listen()",
-        "Error in inet_pton()",
-        "Error in selector_fd_set_nio()",
-        "Error in setsockopt()",
+    "Error in socket()",
+    "Error in bind()",
+    "Error in listen()",
+    "Error in inet_pton()",
+    "Error in selector_fd_set_nio()",
+    "Error in setsockopt()",
 };
 
 #endif

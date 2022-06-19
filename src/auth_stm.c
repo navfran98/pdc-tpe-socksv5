@@ -10,8 +10,6 @@
 #include "../headers/logger.h"
 #include "../headers/parameters.h"
 
-#define ENOUGH_SPACE_TO_auth_LOG 150
-
 unsigned
 auth_init(const unsigned state, struct selector_key *key){
     struct auth_stm * auth_stm = &ATTACHMENT(key)->auth;
@@ -22,7 +20,6 @@ auth_init(const unsigned state, struct selector_key *key){
     auth_parser_init(&auth_stm->auth_parser);
     auth_stm->reply = AUTH_FAIL;
     return state;
-
 }
 
 unsigned
@@ -57,7 +54,7 @@ auth_read(struct selector_key *key) {
             if(selector_set_interest_key(key, OP_WRITE) != SELECTOR_SUCCESS) {
                 goto finally;
             }
-            auth_marshall(auth_stm->wb, auth_stm->reply);
+            auth_fill_msg(auth_stm->wb, auth_stm->reply);
             ret_state = AUTH_WRITE;
         }
     } else {
@@ -65,7 +62,7 @@ auth_read(struct selector_key *key) {
     }
     return ret_state;
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }
 
 unsigned
@@ -96,5 +93,5 @@ auth_write(struct selector_key *key) {
     return ret_state;
 
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }

@@ -21,13 +21,9 @@ void socksv5_passive_accept(struct selector_key *key) {
 
     const int client_sock = accept(key->fd, (struct sockaddr*)&new_client_addr, &new_client_addr_len);
 
-
     if(client_sock == -1) {
-        // log_new_connection("Client failed to connect");
         goto finally;
-    } else {
-        // log_new_connection("Client connected succesfully");
-    }
+    } 
 
     if(selector_fd_set_nio(client_sock) == -1) {
         goto finally;
@@ -91,9 +87,8 @@ struct socksv5 * new_socksv5(int client_fd) {
     socksv5->client_fd = client_fd;
 
     socksv5->stm.initial = GREETING_READ;
-    socksv5->stm.max_state = ERROR_GLOBAL_STATE;
+    socksv5->stm.max_state = ERROR;
     socksv5->stm.states = socksv5_describe_states();
-
 
     stm_init(&socksv5->stm);
 
@@ -140,12 +135,10 @@ socksv5_done(struct selector_key * key) {
     
     // 3. Lo eliminamos de la lista y eliminamos la estructura
     socksv5_destroy(ATTACHMENT(key));
-    
 }
 
 void
 socksv5_destroy(struct socksv5 *s) {
-    
     //Lo saco de la lista
     if(s != NULL){
         if(s->next != NULL){
@@ -156,7 +149,6 @@ socksv5_destroy(struct socksv5 *s) {
         } else {
             first = s->next;
         } 
-
         // Elimino la estructura y hago los frees
     }
 }
@@ -168,7 +160,7 @@ socksv5_read(struct selector_key *key) {
 
     enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_read(stm, key);
 
-    if(state == ERROR_GLOBAL_STATE || state == DONE) {
+    if(state == ERROR || state == DONE) {
         socksv5_done(key);
     }
 }
@@ -179,7 +171,7 @@ socksv5_write(struct selector_key *key) {
 
     enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_write(stm, key);
 
-    if(state == ERROR_GLOBAL_STATE || state == DONE) {
+    if(state == ERROR || state == DONE) {
         socksv5_done(key);
     }
 }
@@ -189,7 +181,7 @@ socksv5_block(struct selector_key *key) {
     struct state_machine * stm  = &ATTACHMENT(key)->stm;
     const enum socksv5_global_state state  = (enum socksv5_global_state)stm_handler_block(stm, key);
 
-    if(state == ERROR_GLOBAL_STATE || state == DONE) {
+    if(state == ERROR || state == DONE) {
         socksv5_done(key);
     }
 }
@@ -203,7 +195,7 @@ socksv5_timeout(struct selector_key * key) {
 
 	enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_timeout(stm, key);
 
-	if(state == ERROR_GLOBAL_STATE) {
+	if(state == ERROR) {
 		socksv5_done(key);
     }
 }

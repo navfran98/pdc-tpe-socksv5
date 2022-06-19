@@ -32,7 +32,7 @@ static const struct fd_handler socksv5_passive_handler = {
 
 // Definimos los handlers para el socket pasivo de nuestro protocolo
 static const struct fd_handler manager_passive_handler = {
-    .handle_read       = NULL /*admin_passive_accept*/,
+    .handle_read       = NULL /*TODO: agregar admin_passive_accept*/,
     .handle_write      = NULL,
     .handle_close      = NULL, 
 };
@@ -93,11 +93,6 @@ int main(const int argc, const char ** argv){
         } else {
             printf("Error when creating admin IPV6 socket\n");
         }
-    }
-
-
-    if(logger_init() == -1) {
-        printf("Error when creating logger\n");
     }
     
     signal(SIGTERM, sigterm_handler);
@@ -172,9 +167,6 @@ finally:
     }
 
     destroy_socksv5_pool(); 
-    // logger_destroy();
-    // free(parameters->pass);
-    // free(parameters->user);
 
     return ret;
 }
@@ -206,14 +198,6 @@ static int register_all_fds(int fd1, int fd2, int fd3, int fd4, fd_selector s) {
         if(ss == SELECTOR_SUCCESS)
             fd4_failed = false;
     }
-
-    // ss = selector_register(s, STDOUT_FILENO, &logger_handler, OP_NOOP, NULL);
-    // if(ss == SELECTOR_SUCCESS)
-    //     stdout_failed = false;
-
-    // ss = selector_register(s, STDERR_FILENO, &logger_handler, OP_NOOP, NULL);
-    // if(ss == SELECTOR_SUCCESS)
-    //     stderr_failed = false;
 
     if( (fd1_failed && fd2_failed) || (fd3_failed && fd4_failed)) {
         return -1;

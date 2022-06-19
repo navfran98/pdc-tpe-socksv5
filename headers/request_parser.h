@@ -22,9 +22,9 @@
 #define COMMAND_NOT_SUPPORTED 0x07
 #define ADDRESS_TYPE_NOT_SUPPORTED 0x08
 
-#define REQUEST_THROUGH_IPV4 0x01
-#define REQUEST_THROUGH_FQDN 0x03
-#define REQUEST_THROUGH_IPV6 0x04
+#define IPV4 0x01
+#define FQDN 0x03
+#define IPV6 0x04
 
 enum request_state {
     request_reading_version,
@@ -37,14 +37,11 @@ enum request_state {
     request_error
 };
 
-
 struct request_parser {
     enum request_state state;
     int atyp;
     int addr_len;
     ssize_t port;
-
-
 
     uint8_t * addr;
     uint8_t addr_index;
@@ -61,6 +58,6 @@ enum request_state
 request_parser_feed( uint8_t c, struct request_parser * req_pars);
 
 void
-request_marshall(buffer * buff, struct request_parser * req_pars);
+request_fill_msg(buffer * buff, struct request_parser * req_pars);
 
 #endif

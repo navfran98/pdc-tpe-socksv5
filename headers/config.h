@@ -9,9 +9,9 @@
 #define SOCKS_PORT 1080
 
 // Manager Server Default Values
-#define MANAGER_ADDR_IPV4 "127.0.0.1"
-#define MANAGER_ADDR_IPV6 "::1"
-#define MANAGER_PORT 8080
+#define ADMIN_ADDR_IPV4 "127.0.0.1"
+#define ADMIN_ADDR_IPV6 "::1"
+#define ADMIN_PORT 8080
 
 #define DISECTORS_ENABLED true
 

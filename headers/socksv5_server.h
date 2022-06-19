@@ -2,6 +2,7 @@
 #define PROTOS2022A_SOCKSERVER
 
 #include <stdint.h>
+
 #include "../headers/stm.h"
 #include "../headers/buffer.h"
 #include "../headers/auth_stm.h"
@@ -21,18 +22,11 @@ struct error_state {
 	int code;
 };
 
-
 typedef struct socksv5 {
     int client_fd;
     int origin_fd;
 
-    // char * client_ip;
-    // uint16_t client_port;
     struct sockaddr_storage client_addr;
-    //socklen_t client_addr_len;
-
-    //char * origin_ip;
-    //uint16_t origin_port;
 
     struct addrinfo * origin_resolution;
     struct addrinfo * origin_resolution_current;

@@ -15,7 +15,6 @@ static int select_method(uint8_t * methods, uint8_t number_of_methods);
 
 unsigned
 greeting_init(const unsigned state, struct selector_key *key) {
-
 	struct greeting_stm * g_stm = &ATTACHMENT(key)->greeting;
     g_stm->rb = &(ATTACHMENT(key)->read_buffer);
     g_stm->wb = &(ATTACHMENT(key)->write_buffer);
@@ -25,7 +24,6 @@ greeting_init(const unsigned state, struct selector_key *key) {
 
     return state;
 }
-
 
 unsigned
 greeting_read(struct selector_key *key) {
@@ -47,7 +45,7 @@ greeting_read(struct selector_key *key) {
             }
 
             if(greeting_marshall(g_stm->wb, g_stm->method_selected) == -1){
-                return ERROR_GLOBAL_STATE;
+                return ERROR;
             }
 
             ret_state = GREETING_WRITE;
@@ -58,7 +56,7 @@ greeting_read(struct selector_key *key) {
     }
     return ret_state;
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }
 
 
@@ -106,5 +104,5 @@ greeting_write(struct selector_key *key) {
     }
     return ret_state;
 finally:
-    return ERROR_GLOBAL_STATE;
+    return ERROR;
 }

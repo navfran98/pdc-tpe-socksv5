@@ -3,7 +3,7 @@
 
 #include "buffer.h"
 
-#define MARSHALL_SPACE 2
+#define MSG_SPACE 2
 #define SUPPORTED_VERSION 0x01
 #define VALID_USER 0x00
 #define INVALID_USER 0x01
@@ -41,7 +41,6 @@ enum auth_state
 auth_parser_feed(uint8_t c, struct auth_parser * pars);
 
 void
-auth_marshall(buffer * buff, uint8_t method);
-
+auth_fill_msg(buffer * buff, uint8_t method);
 
 #endif

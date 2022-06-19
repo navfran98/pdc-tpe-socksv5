@@ -63,21 +63,21 @@ request_parser_feed(const uint8_t c, struct request_parser * req_pars) {
             break;
         
         case request_reading_atyp:
-            if(c == REQUEST_THROUGH_IPV4) {
+            if(c == IPV4) {
                 req_pars->addr_len = 4;
                 req_pars->addr = calloc(4 + 1, sizeof(c));
                 if(req_pars->addr == NULL) {
                     req_pars->state = request_error;
                     req_pars->reply = GENERAL_SOCKS_SERVER_FAILURE; 
                 }
-            } else if(c == REQUEST_THROUGH_IPV6) {
+            } else if(c == IPV6) {
                 req_pars->addr_len = 16;
                 req_pars->addr = calloc(16 + 1, sizeof(c)); 
                 if(req_pars->addr == NULL) {
                     req_pars->state = request_error;
                     req_pars->reply = GENERAL_SOCKS_SERVER_FAILURE;
                 }
-            }else if(c==REQUEST_THROUGH_FQDN){
+            }else if(c==FQDN){
                 req_pars->addr_len = 0;
             } else {
                 req_pars->reply = ADDRESS_TYPE_NOT_SUPPORTED;
@@ -134,8 +134,8 @@ request_parser_feed(const uint8_t c, struct request_parser * req_pars) {
     return req_pars->state;
 }
 
-void request_marshall(buffer * buff, struct request_parser * req_pars){
-   size_t space_left_to_write;
+void request_fill_msg(buffer * buff, struct request_parser * req_pars){
+    size_t space_left_to_write;
     uint8_t *where_to_write = buffer_write_ptr(buff, &space_left_to_write);
 
     uint16_t total_space = 10;
@@ -146,7 +146,7 @@ void request_marshall(buffer * buff, struct request_parser * req_pars){
     where_to_write[i++] = req_pars->reply;
     where_to_write[i++] = 0x00;  // RSV
 
-    where_to_write[i++] = REQUEST_THROUGH_IPV4;
+    where_to_write[i++] = IPV4;
     for(int j = i; j < IPv4_LENGTH + i; j++) {
         where_to_write[j] = 0x00;   // BIND.ADDR
     }
