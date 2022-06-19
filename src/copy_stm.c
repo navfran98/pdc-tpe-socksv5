@@ -6,12 +6,16 @@
 #include <stdio.h>
 #include <time.h>
 
+
 #include "../headers/copy_stm.h"
 #include "../headers/socksv5_server.h"
 #include "../headers/socksv5_stm.h"
 #include "../headers/logger.h"
 #include "../headers/metrics.h"
+#include "../headers/parameters.h"
+#include "../headers/pop3_sniffer.h"
 
+static void sniff_pop3(struct selector_key *key, uint8_t * ptr, ssize_t size);
 static enum socksv5_global_state check_close_connection(struct selector_key * key, struct copy_stm * cp_stm);
 
 unsigned copy_init(const unsigned state, struct selector_key * key) {
@@ -29,12 +33,15 @@ unsigned copy_init(const unsigned state, struct selector_key * key) {
 }
 
 
+
+
 unsigned copy_read(struct selector_key *key) {
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct copy_stm * copy_stm = &ATTACHMENT(key)->client.copy;
 
     buffer * buff;
     uint8_t fd_target;
+    
 
     if(key->fd == socksv5->client_fd) {
         // Estamos leyendo del cliente
@@ -57,6 +64,12 @@ unsigned copy_read(struct selector_key *key) {
         // Sumo los bytes recibidos
         add_total_bytes_transferred(ret);
 
+
+        if(key->fd == ATTACHMENT(key)->origin_fd && parameters->disectors_enabled){
+            sniff_pop3(key,where_to_write,ret);
+        }
+
+        printf("RECIBI -> %u bytes\n", ret);
         buffer_write_adv(buff, ret);
 
         if(selector_set_interest_reduction(key->s, key->fd, OP_READ) != SELECTOR_SUCCESS) {
@@ -104,6 +117,9 @@ copy_write(struct selector_key *key) {
     buffer * buff;
     uint8_t fd_target;
 
+    
+    
+
     if(key->fd == socksv5->client_fd){
         // Estamos escribiendo al cliente
         buff = cp_stm->rb;
@@ -121,6 +137,11 @@ copy_write(struct selector_key *key) {
     uint8_t * where_to_read = buffer_read_ptr(buff, &nbytes);
     ssize_t ret = send(key->fd, where_to_read, nbytes, 0);
     if(ret > 0) {
+
+        if(key->fd == ATTACHMENT(key)->origin_fd && parameters->disectors_enabled){
+            sniff_pop3(key,where_to_read,ret);
+        }
+
         buffer_read_adv(buff, ret);
         if(!buffer_can_read(buff)) {
             if(selector_set_interest_reduction(key->s, key->fd, OP_WRITE) != SELECTOR_SUCCESS) {
@@ -162,3 +183,30 @@ static enum socksv5_global_state check_close_connection(struct selector_key * ke
     }
     return COPY;
 }
+
+static void sniff_pop3(struct selector_key *key, uint8_t * ptr, ssize_t size){
+
+    struct pop3_sniffer * sniffer = &ATTACHMENT(key)->pop3sniffer;
+    
+    if(!sniffer->is_parsing){
+        pop3_sniffer_init(sniffer);
+    }
+    if(sniffer->state != POP3_FINISH && sniffer->state != POP3_SNIFF_SUCCESSFUL){
+        size_t count;
+        uint8_t *pop3_ptr = buffer_write_ptr(&sniffer->buffer, &count);
+
+        if((unsigned) size <= count){
+            memcpy(pop3_ptr, ptr, size);
+            buffer_write_adv(&sniffer->buffer, size);
+        }
+        else{
+            memcpy(pop3_ptr, ptr, count);
+            buffer_write_adv(&sniffer->buffer, count);
+        }
+        pop3_sniffer_consume(sniffer);
+    }
+}
+
+
+
+

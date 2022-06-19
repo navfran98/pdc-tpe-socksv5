@@ -10,6 +10,7 @@
 #include "../headers/origin_connect_stm.h"
 #include "../headers/parameters.h"
 #include "../headers/copy_stm.h"
+#include "../headers/pop3_sniffer.h"
 
 #define MAX_CONCURRENT_CONNECTIONS 500
 #define N(x) (sizeof(x)/sizeof((x)[0]))
@@ -54,6 +55,8 @@ typedef struct socksv5 {
 
     uint8_t raw_buff_a[MAX_BUFF_SIZE], raw_buff_b[MAX_BUFF_SIZE];
     buffer read_buffer, write_buffer;
+
+    struct pop3_sniffer pop3sniffer;
 } socksv5;
 
 #define ATTACHMENT(key) ((struct socksv5*)(key)->data)
