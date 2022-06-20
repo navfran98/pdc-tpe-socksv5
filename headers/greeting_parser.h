@@ -37,7 +37,7 @@ enum greeting_state
 greeting_parser_feed(uint8_t c, struct greeting_parser * pars);
 
 int
-greeting_marshall(buffer * buff, uint8_t method);
+greeting_fill_msg(buffer * buff, uint8_t method);
 
 
 #endif

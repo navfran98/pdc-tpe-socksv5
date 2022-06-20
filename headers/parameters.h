@@ -9,8 +9,8 @@
 #define MAX_ADMINS 1
 
 struct user {
-    char *name;
-    char *pass;
+    char * name;
+    char * pass;
 };
 
 struct params {
@@ -40,5 +40,6 @@ extern params parameters;
 
 bool authenticate_user(uint8_t * username, uint8_t * password);
 bool authenticate_admin(uint8_t * username, uint8_t * password);
+int add_user( char*name, char*pass);
 
 #endif

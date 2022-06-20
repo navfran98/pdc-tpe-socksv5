@@ -1,3 +1,7 @@
+#ifndef PROTOS2022A_ADMINSTM
+#define PROTOS2022A_ADMINSTM
+
+#include "../headers/stm.h"
 /*
 Metodos que puede pedir el admin:
     - pedir metricas
@@ -13,3 +17,17 @@ Estados:
     
     Luego me quedo escuchando otra request hasta que se desconecte o envie un comando para cerrar conexcion
 */
+
+enum admin_state {
+    ADMIN_AUTH,
+
+    ADMIN_REQUEST,
+
+    ADMIN_DONE, 
+
+    ADMIN_ERROR
+};
+
+ const struct state_definition * admin_describe_states(void);
+
+#endif

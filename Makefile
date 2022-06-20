@@ -38,4 +38,4 @@ clean:
 	rm -rf $(OFILES); rm -rf $(COFILES)
 
 run:
-	make clean; make all; ./socks5d -u coco:coco;
+	make clean; make all; ./socks5d -a santi:santi -u coco:coco;

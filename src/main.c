@@ -12,6 +12,7 @@
 #include "../headers/selector.h"
 #include "../headers/parameters.h"
 #include "../headers/socksv5_server.h"
+#include "../headers/admin_server.h"
 
 static bool done = false;
 
@@ -31,8 +32,8 @@ static const struct fd_handler socksv5_passive_handler = {
 };
 
 // Definimos los handlers para el socket pasivo de nuestro protocolo
-static const struct fd_handler manager_passive_handler = {
-    .handle_read       = NULL /*TODO: agregar admin_passive_accept*/,
+static const struct fd_handler admin_passive_handler = {
+    .handle_read       = admin_passive_accept,
     .handle_write      = NULL,
     .handle_close      = NULL, 
 };
@@ -189,12 +190,12 @@ static int register_all_fds(int fd1, int fd2, int fd3, int fd4, fd_selector s) {
             fd2_failed = false;
     }
     if(fd3 != -1) {
-        ss = selector_register(s, fd3, &manager_passive_handler, OP_READ, NULL);
+        ss = selector_register(s, fd3, &admin_passive_handler, OP_READ, NULL);
         if(ss == SELECTOR_SUCCESS)
             fd3_failed = false;
     }
     if(fd4 != -1) {
-        ss = selector_register(s, fd4, &manager_passive_handler, OP_READ, NULL);
+        ss = selector_register(s, fd4, &admin_passive_handler, OP_READ, NULL);
         if(ss == SELECTOR_SUCCESS)
             fd4_failed = false;
     }

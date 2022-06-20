@@ -44,7 +44,7 @@ greeting_read(struct selector_key *key) {
                 goto finally;
             }
 
-            if(greeting_marshall(g_stm->wb, g_stm->method_selected) == -1){
+            if(greeting_fill_msg(g_stm->wb, g_stm->method_selected) == -1){
                 return ERROR;
             }
 
@@ -86,7 +86,7 @@ greeting_write(struct selector_key *key) {
     ssize_t ret = send(key->fd, where_to_read, nbytes, 0);
     uint8_t ret_state = GREETING_WRITE;
     if(ret > 0) {
-        buffer_read_adv(g_stm->wb, nbytes);
+        buffer_read_adv(g_stm->wb, ret);
         if(!buffer_can_read(g_stm->wb)) {
             if(selector_set_interest_key(key, OP_READ) != SELECTOR_SUCCESS) {
                 goto finally;

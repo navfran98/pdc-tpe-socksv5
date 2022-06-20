@@ -1,5 +1,5 @@
-#ifndef POP3SNIFF_H
-#define POP3SNIFF_H
+#ifndef PROTOS2022A_POP3SNIFFER
+#define PROTOS2022A_POP3SNIFFER
 
 #include <stdint.h>
 #include <stdbool.h>

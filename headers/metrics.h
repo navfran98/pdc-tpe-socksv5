@@ -1,6 +1,8 @@
 #ifndef PROTOS2022A_METRICS
 #define PROTOS2022A_METRICS
 
+#include <stdint.h>
+
 void add_connection();
 void remove_connection();
 void add_total_bytes_transferred(unsigned long long bytes);

@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 #define MAX_BUFF_SIZE 5000
-
+#define MIN_BUFFER_SIZE 300
 /**
  * buffer.c - buffer con acceso directo (útil para I/O) que mantiene
  *            mantiene puntero de lectura y de escritura.

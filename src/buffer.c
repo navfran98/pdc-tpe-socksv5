@@ -8,8 +8,6 @@
 
 #include "../headers/buffer.h"
 
-#define MIN_BUFFER_SIZE 300
-
 static uint64_t BUFFER_SIZE = 4096;
 
 uint64_t get_buff_size() {
@@ -17,7 +15,7 @@ uint64_t get_buff_size() {
 }
 
 int set_buff_size(uint64_t size) {
-    if(size < MIN_BUFFER_SIZE)
+    if(size < MIN_BUFFER_SIZE || size > MAX_BUFF_SIZE)
         return -1;
     BUFFER_SIZE = size;
     return 0;

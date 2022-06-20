@@ -22,8 +22,6 @@ request_read_init(const unsigned state, struct selector_key *key) {
     request_parser_init(&req_stm->request_parser);
 
     return state;
-finally:
-    return ERROR;
 }
 
 
@@ -71,7 +69,7 @@ request_write(struct selector_key *key) {
     ssize_t ret = send(key->fd, where_to_read, nbytes, 0);
 
     if(ret > 0) {
-        buffer_read_adv(req_stm->wb, nbytes);
+        buffer_read_adv(req_stm->wb, ret);
         if(!buffer_can_read(req_stm->wb)) {
             if(req_stm->request_parser.reply == SUCCEDED) {
                 if(selector_set_interest_key(key, OP_READ) != SELECTOR_SUCCESS) {

@@ -76,24 +76,34 @@ unsigned copy_read(struct selector_key *key) {
         }
 
     } else if(ret == 0 || errno == ECONNRESET) {
+        
         if(selector_set_interest_reduction(key->s, key->fd, OP_READ) != SELECTOR_SUCCESS) {
             goto finally;
         }
         
         if(key->fd == socksv5->origin_fd) {
+            printf("Se desconectó el origin\n");
             copy_stm->reading_origin = false;
-        } else if(key->fd == socksv5->client_fd) {
+            copy_stm->writing_origin = false;
             copy_stm->reading_client = false;
+        } else if(key->fd == socksv5->client_fd) {
+            printf("Se desconectó el client\n");
+            copy_stm->reading_client = false;
+            copy_stm->writing_client = false;
+            copy_stm->reading_origin = false;
         }
 
         if (!buffer_can_read(buff)) {
             if (shutdown(fd_target, SHUT_WR) < 0) {
+                printf("Error en shutdown!\n");
                 goto finally;
             }
             if(key->fd == socksv5->origin_fd) {
                 copy_stm->writing_client = false;
+                
             } else if(key->fd == socksv5->client_fd) {
                 copy_stm->writing_origin = false;
+                
             }
         }
     } else {

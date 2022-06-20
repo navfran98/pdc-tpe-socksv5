@@ -66,7 +66,7 @@ greeting_parser_feed(const uint8_t c, struct greeting_parser * pars) {
 }
 
 int
-greeting_marshall(buffer * buff, const uint8_t method) {
+greeting_fill_msg(buffer * buff, const uint8_t method) {
     size_t space_left;
     uint8_t * where_to_write = buffer_write_ptr(buff, &space_left);
     if(space_left < 2){

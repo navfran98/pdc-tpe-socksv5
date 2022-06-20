@@ -1,1 +1,0 @@
-// Aca se define el request_read y request_write

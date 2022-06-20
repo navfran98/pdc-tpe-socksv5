@@ -1,1 +1,0 @@
-// Aca se define el greeting_read, greeting_write y otra funcion auxiliar para autenticar

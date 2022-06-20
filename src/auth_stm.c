@@ -75,7 +75,7 @@ auth_write(struct selector_key *key) {
 
     uint8_t ret_state = AUTH_WRITE;
     if(ret > 0) {
-        buffer_read_adv(auth_stm->wb, nbytes);
+        buffer_read_adv(auth_stm->wb, ret);
         if(!buffer_can_read(auth_stm->wb)) {
             if(selector_set_interest_key(key, OP_READ) != SELECTOR_SUCCESS) {
                 goto finally;

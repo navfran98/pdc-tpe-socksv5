@@ -1,7 +1,7 @@
 #ifndef PROTOS2022A_AUTHPARSER
 #define PROTOS2022A_AUTHPARSER
 
-#include "buffer.h"
+#include "../headers/buffer.h"
 
 #define MSG_SPACE 2
 #define SUPPORTED_VERSION 0x01
@@ -25,8 +25,8 @@ enum auth_state {
 struct auth_parser {
     enum auth_state state;
     
-    uint8_t *user;
-    uint8_t *password;
+    uint8_t * user;
+    uint8_t * password;
     uint8_t chars_remaining;
     uint8_t index; 
 };

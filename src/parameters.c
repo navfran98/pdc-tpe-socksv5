@@ -54,6 +54,19 @@ static void user(char * s, struct user * user) {
     }
 }
 
+int add_user( char*name, char*pass){
+    if(parameters->user_count < MAX_USERS){
+        struct user * user_to_add = parameters->users + parameters->user_count;
+        user_to_add->name = name;
+        user_to_add->pass = pass;
+        parameters->user_count++;
+        return 0;
+    }
+    return -1;
+}
+
+
+
 
 static void
 version(void) {
@@ -94,8 +107,8 @@ parse_args(const int argc, char **argv) {
     parameters->user_count = 0;
     parameters->admin_count = 0;
 
-    while (true) {
-        c = getopt(argc, argv, "hl:L:Np:P:v:u:a");
+    while(true) {
+        c = getopt(argc, argv, "hl:L:Np:P:v:u:a:");
         if (c == -1)
             break;
 
@@ -120,6 +133,7 @@ parse_args(const int argc, char **argv) {
                 break;
 
             case 'a':
+                printf("%s\n",optarg);
                 if(parameters->admin_count >= MAX_ADMINS) {
                     fprintf(stderr, "Can't have more than %d admins.\n", MAX_ADMINS);
                     exit(1);
