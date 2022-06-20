@@ -36,7 +36,7 @@ admin_request_read(struct selector_key *key) {
     uint8_t ret_state = ADMIN_REQUEST; // current state
     if(ret > 0) {
         buffer_write_adv(admin_request_stm->rb, ret);
-        enum admin_req_state cmd = admin_consume_req_buffer(admin_request_stm->rb, &admin_request_stm->admin_request_parser);
+        /*enum admin_req_state cmd = */admin_consume_req_buffer(admin_request_stm->rb, &admin_request_stm->admin_request_parser);
         if(selector_set_interest_key(key, OP_WRITE) != SELECTOR_SUCCESS) {
             goto finally;
         }

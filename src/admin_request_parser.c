@@ -231,7 +231,7 @@ int create_user(struct req_parser * pars){
 
 int change_buffer_size(char * new_buff_size){
     uint64_t new_size = 0;
-    for(int i = 0; i < strlen(new_buff_size); i++){
+    for(size_t i = 0; i < strlen(new_buff_size); i++){
         new_size = new_size * 10 + (new_buff_size[i] - '0');
     }
     return set_buff_size(new_size);

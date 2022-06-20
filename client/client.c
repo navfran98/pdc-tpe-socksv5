@@ -9,6 +9,8 @@
 // CONFIG
 #define MAX_NUMBER_OF_PARAMETERS 2
 #define ANS_BUFF_SIZE 10000
+#define clrscr() printf("\033[1;1H\033[2J")
+#define context(x) printf("\033[0;32m");printf("[ %s ]\n", x);printf("\033[0m");
 
 // PROTOCOL CODES
 #define VALID_USR 0x00
@@ -26,11 +28,9 @@
 #define ERROR_CREATING_SOCKET -2
 #define IMPOSIBLE_TO_CONNECT -3
 #define WRITE_TO_SERVER_FAILED -4
-
-// print metricas -> 1
-// agregar usuario -> 2 [usuario] [contraseña]
-// list users -> 3 
-// change buffer size --> 4 [buffsize en bytes]
+#define SERVER_NO_RESPONSE -5
+#define BAD_SINTAX -6
+#define USR_OR_PWD_WRONG -7
 
 // PARAMETERS
 char usr  [255] = {0};
@@ -45,6 +45,10 @@ void request_credentials();
 void send_greeting_to_server();
 void print_menu();
 void obtener_metricas();
+void error_handler(int n, char * msg, int err_num);
+void auth_response_printer(uint8_t c);
+void wait_to_continue();
+
 // Este codigo correrlo en otra terminal, pasarle por entrada estandar:
 //
 // ./client <DONDE TENGO EL SERVER CORRIENDO> <PUERTO>
@@ -55,6 +59,11 @@ int main( int argc, char ** argv ) {
 
     if( verify_parameters(argc, argv) == 1 ) {
 
+        ////////////////////////////////////////////////////////////////////////
+        //                                                                    //
+        //                 CONFIGURACION DE SOCKETS DEL ADMIN                 //
+        //                                                                    //
+        ////////////////////////////////////////////////////////////////////////
 
         // Pedimos la informacion del servidor
         struct hostent * server = gethostbyname(host);
@@ -62,196 +71,159 @@ int main( int argc, char ** argv ) {
             fprintf(stderr, "Host not found.");
             exit(HOST_NOTFOUND);
         }
-
         // Configuracion pre-conexion
         int socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if( socket_fd < 0 ) {
             fprintf(stderr, "Coudn't create socket.");
             exit(ERROR_CREATING_SOCKET);
         }
-
         // Configuracion pre-conexion
         struct sockaddr_in addr;
-
         // Seteamos en 0 la estructura
-        bzero(&addr, sizeof(struct sockaddr_in));
+        memset(&addr, 0, sizeof(struct sockaddr_in));
+        //bzero(&addr, sizeof(struct sockaddr_in));
         addr.sin_family = AF_INET;
         // Aca deberiamos recorrer toda la lista de addresses del host
         // pero como lo vamos a usar solo para el localhost no hace falta :D
-        bcopy(server->h_addr_list[0], &addr.sin_addr.s_addr, server->h_length);
+        memcpy(server->h_addr_list[0], &addr.sin_addr.s_addr, server->h_length);
         // Le pasamos el numero de puerto
         addr.sin_port = htons(port_number);
-
         // Nos conectamos con el servidor
         if( connect(socket_fd, (struct sockaddr * )&addr, sizeof(addr)) < 0 ) {
             fprintf(stderr, "Coudn't connect to server.");
             exit(IMPOSIBLE_TO_CONNECT);
         }
 
+        ////////////////////////////////////////////////////////////////////////
+        //                                                                    //
+        //                 AUTENTICACION DEL ADMINISTRADOR                    //
+        //                                                                    //
+        ////////////////////////////////////////////////////////////////////////
+
         // Mandamos el greeting/auth del admin
         request_credentials();
         size_t index = 0;
-        int n = 0, usr_len = strlen(usr), pass_len = strlen(pwd);
-        // las 2 strlen del usr y pass + la usr y el pass
+        int n = 0; 
+        size_t usr_len = strlen(usr), pass_len = strlen(pwd);
+        // Alocamos espacio para: las strlen del usr y pass + la usr + el pass
         uint8_t * auth_msg = malloc(2 + usr_len + pass_len);
-        auth_msg[index++] = usr_len;
-        for(int i = 0;i < usr_len;i++) {
-            auth_msg[index] = usr[i];
-            index++;
-        }
-        auth_msg[index++] = pass_len;
-        for(int i = 0;i < pass_len;i++) {
-            auth_msg[index] = pwd[i];
-            index++;
-        }
-        //printf("%s", auth_msg);
-        n = write(socket_fd, auth_msg, index);
-        if( n < 0 ) {
-            fprintf(stderr, "Coudn't write to server.");
-            exit(WRITE_TO_SERVER_FAILED);
-        }else{
-            printf("Le mando al proxy la auth siendo el admin\n");
-        }
-        free(auth_msg);
-        // Leemos la respuesta al greeting del server
-        uint8_t auth_ans[1];
-        bzero(auth_ans, 1);
-        n = recv(socket_fd, auth_ans, 1, 0);
-        if(n < 0){
-            fprintf(stderr, "Coudn't receive from server.");
-            exit(WRITE_TO_SERVER_FAILED);
-        }else{
-            switch (auth_ans[0]){
-            case 0:
-                printf("ENTRASTE MOSTRO\n");
-                break;
-            case 1:
-                printf("TE LA DISTE CONTRA LA PUERTA\n");
-                break;
-            case 2:
-                printf("TODO MAL CON VOS PETE\n");
-                break;
-            default:
-                break;
-            }
-        }
-        if(auth_ans[0] == 0){
-            char response[1000] = {0};
-            char buffsize[1000] = {0};
-            char c;
-            //  char * k = malloc(2 * sizeof(char));
-            //  sprintf(k, "1");
-            char * req;
-            print_menu();
-            int get_out = 0;
-            while (get_out == 0) {
-                c=getchar();
-                if(c != '\n'){
-                    if (getchar() == '\n'){
-                        index = 0;
-                        switch (c) {
-                            case '1':
-                                n = write(socket_fd, "1" , 1);
-                                if(n == 0){
-                                    printf("NO ENVIE UN CARAJO\n");
-                                }
-                                if( n < 0 ) {
-                                    printf("ERROR\n");
-                                    fprintf(stderr, "Couldn't write to server 1.");
-                                    exit(WRITE_TO_SERVER_FAILED);
-                                }else{
-                                    printf("Pidiendo metricas...\n");
-                                }
-                                n = recv(socket_fd, response, 1000, 0);
-                                if(n < 0){
-                                    fprintf(stderr, "Couldn't receive from server.");
-                                    exit(WRITE_TO_SERVER_FAILED);
-                                }else{
-                                    printf("%s\n",response);
-                                }
-                                break;
-                            case '2':
-                                printf("Creando nuevo usuario, ingrese:\n");
-                                request_credentials();
-                                req = malloc(3 + strlen(usr) + strlen(pwd) + 1);
-                                req[index++] = '2';
-                                req[index++] = ' ';
-                                for(int i = 0; i < strlen(usr); i++) {
-                                    req[index] = usr[i];
-                                    index++;
-                                }
-                                req[index++] = ' ';
-                                for(int i = 0; i < strlen(pwd); i++) {
-                                    req[index] = pwd[i];
-                                    index++;
-                                }
-                                req[index++]='\n';
-                                n = write(socket_fd, req, index);
 
-                                n = recv(socket_fd, response, 1000, 0);
-                                if(n < 0){
-                                    fprintf(stderr, "Couldn't receive from server.");
-                                    exit(WRITE_TO_SERVER_FAILED);
-                                }else{
-                                    printf("%s\n",response);
-                                }
-                                free(req);
-                                break;
-                            case '3':
-                                n = write(socket_fd, "3", 1);
-                                if( n < 0 ) {
-                                    fprintf(stderr, "Couldn't write to server 3.");
-                                    exit(WRITE_TO_SERVER_FAILED);
-                                }else{
-                                    printf("Listando usuarios...\n");
-                                }
-                                n = recv(socket_fd, response, 1000, 0);
-                                if(n < 0){
-                                    fprintf(stderr, "Couldn't receive from server.");
-                                    exit(WRITE_TO_SERVER_FAILED);
-                                }else{
-                                    printf("%s\n",response);
-                                }
-                                break;
-                            case '4':
-                                printf("Nuevo tamanio de buffer:");
-                                index = 0;
-                                scanf("%s", buffsize);
-                                char * req = malloc(4 + strlen(buffsize));
-                                req[index++] = '4';
-                                req[index++] = ' ';
-                                for(ssize_t i = 0; i < strlen(buffsize); i++){
-                                    req[index++] = buffsize[i];
-                                }
-                                req[index++] = '\n';
-                                req[index] = '\0';
-                                n = write(socket_fd, req, index);
-                                n = recv(socket_fd, response, 1000, 0);
-                                if(n < 0){
-                                    fprintf(stderr, "Couldn't receive from server.");
-                                    exit(WRITE_TO_SERVER_FAILED);
-                                }else{
-                                    printf("%s\n",response);
-                                }
-                                free(req);
-                                break;
-                            
-                            case '5':
-                                get_out = 1;
-                                break;
-                        }
-                    } else {
-                        while(getchar() != '\n');
-                        printf("Invalid command\n");
-                    }
-                }
+        // Adjuntamos las credenciales
+        auth_msg[index++] = usr_len;
+        for(size_t i = 0;i < usr_len;i++, index++) 
+            auth_msg[index] = usr[i];
+        auth_msg[index++] = pass_len;
+        for(size_t i = 0;i < pass_len;i++, index++)
+            auth_msg[index] = pwd[i];
+        n = write(socket_fd, auth_msg, index);
+        
+        // Validamos la respuesta
+        error_handler(n, "Error al enviar el mensaje de auth.\n", WRITE_TO_SERVER_FAILED);
+        
+        // Liberamos recursos
+        free(auth_msg);
+
+        ////////////////////////////////////////////////////////////////////////
+        //                                                                    //
+        //                  LEEMOS LA RTA AL AUTH DEL SERVER                  //
+        //                                                                    //
+        ////////////////////////////////////////////////////////////////////////
+
+        // Leemos la respuesta al greeting del server
+        uint8_t auth_ans[1] = {0};
+        n = recv(socket_fd, auth_ans, 1, 0);
+
+        error_handler(n, "El servidor no respondio.\n", SERVER_NO_RESPONSE);
+        auth_response_printer(auth_ans[0]);
+
+        ////////////////////////////////////////////////////////////////////////
+        //                                                                    //
+        //                   ANALIZAMOS EL COMANDO A ENVIAR                   //
+        //                                                                    //
+        ////////////////////////////////////////////////////////////////////////
+    
+        char response[1000] = {0};
+        char buffsize[1000] = {0};
+        char c;
+        char * req;
+        int get_out = 0;
+        print_menu();
+        while (get_out == 0) {
+            c=getchar();
+            index = 0;
+            switch (c) {
+                case '1':
+                    n = write(socket_fd, "1" , 1);
+                    error_handler(n, "Error al enviar el comando ingresado.\n", WRITE_TO_SERVER_FAILED);
+                    n = recv(socket_fd, response, 1000, 0);
+                    error_handler(n, "El servidor no responde.\n", SERVER_NO_RESPONSE);
+                    clrscr();
+                    context("Metricas");
+                    printf("%s\n",response);
+                    wait_to_continue();
+                    break;
+                case '2':
+                    clrscr();
+                    context("Creacion de usuario");
+                    request_credentials();
+                    req = malloc(3 + strlen(usr) + strlen(pwd) + 1);
+                    req[index++] = '2';
+                    req[index++] = ' ';
+                    for(size_t i = 0; i < strlen(usr); i++, index++)
+                        req[index] = usr[i];
+                    req[index++] = ' ';
+                    for(size_t i = 0; i < strlen(pwd); i++,index++)
+                        req[index] = pwd[i];
+                    req[index++]='\n';
+                    n = write(socket_fd, req, index);
+                    error_handler(n, "No se pudieron enviar las credenciales del usuario.\n", WRITE_TO_SERVER_FAILED);
+                    n = recv(socket_fd, response, 1000, 0);
+                    error_handler(n, "El servidor no confirmo la creacion del usuario.\n", SERVER_NO_RESPONSE);
+                    printf("%s\n",response);
+                    wait_to_continue();
+                    free(req);
+                    break;
+                case '3':
+                    clrscr();
+                    n = write(socket_fd, "3", 1);
+                    error_handler(n, "No se pudo enviar el comando.", WRITE_TO_SERVER_FAILED);
+                    n = recv(socket_fd, response, 1000, 0);
+                    error_handler(n, "El servidor no responde.\n", SERVER_NO_RESPONSE);
+                    context("Listado de usuarios");
+                    printf("%s",response);
+                    wait_to_continue();
+                    break;
+                case '4':
+                    clrscr();
+                    context("Modificar buffer");
+                    index = 0;
+                    printf("Ingrese el tamaño nuevo (bytes): ");
+                    scanf("%s", buffsize);
+                    char * req = malloc(4 + strlen(buffsize));
+                    req[index++] = '4';
+                    req[index++] = ' ';
+                    for(size_t i = 0; i < strlen(buffsize); i++)
+                        req[index++] = buffsize[i];
+                    req[index++] = '\n';
+                    req[index] = '\0';
+                    n = write(socket_fd, req, index);
+                    error_handler(n, "No se pudo enviar el comando de cambio de buffer.", WRITE_TO_SERVER_FAILED);
+                    n = recv(socket_fd, response, 1000, 0);
+                    error_handler(n, "El servidor no confirmo el cambio.\n", SERVER_NO_RESPONSE);
+                    printf("%s\n",response);
+                    wait_to_continue();
+                    free(req);
+                    break;
+                
+                case '5':
+                    get_out = 1;
+                    break;
+                default:
+                    context("Opcion invalida");
+                    break;
             }
-        } else if( auth_ans[0] == 1 ) {
-            fprintf(stderr, "Wrong credentials.");
-        } else if( auth_ans[0] == 2 ){
-            fprintf(stderr, "Bad sintax.");
-        } else {
-            fprintf(stderr, "Bug!! -->  Se recibio: %u.", auth_ans[0]);
+            clrscr();
+            print_menu();
         }
     } else {
         return 0;
@@ -260,20 +232,54 @@ int main( int argc, char ** argv ) {
 }
 
 void print_menu() {
+    context("Sesion iniciada");
     printf("Bienvenido al menu de administrador, que desea hacer...\n");
-    printf("\t 1. Obtener metricas.\n");
-    printf("\t 2. Agregar un usuario.\n");
-    printf("\t 3. Listar usuarios del proxy.\n");
-    printf("\t 4. Cambiar buffer del sistema.\n");
-    printf("\t 5. Salir.\n");
+    printf("  1. Obtener metricas.\n");
+    printf("  2. Agregar un usuario.\n");
+    printf("  3. Listar usuarios del proxy.\n");
+    printf("  4. Cambiar buffer del sistema.\n");
+    printf("  5. Salir.\n");
     printf("Ingrese alguna opcion: \n");
+}
+
+void wait_to_continue() {
+    getchar();
+    printf("Presione cualquier tecla para continuar.\n");
+    getchar();
+}
+
+void error_handler(int n, char * msg, int err_num) {
+    if( n <= 0 ) {
+        printf("%s", msg);
+        exit(err_num);
+    }
+}
+
+void auth_response_printer(uint8_t c) {
+    switch (c){
+    case 0:
+        clrscr();
+        break;
+    case 1:
+        printf("Usuario o contraseña invalidos\n");
+        exit(USR_OR_PWD_WRONG);
+        break;
+    case 2:
+        printf("Mensaje mal formado\n");
+        exit(BAD_SINTAX);
+        break;
+    default:
+        break;
+    }
 }
 
 void request_credentials() {
     printf("Usuario: ");
     scanf("%s", usr);
-    printf("Contrasenia: ");
+    getchar();
+    printf("Contraseña: ");
     scanf("%s", pwd);
+    getchar();
 }
 
 int verify_parameters(int argc, char ** argv) {
@@ -288,9 +294,5 @@ int verify_parameters(int argc, char ** argv) {
     port_number = atoi(argv[2]);
 
     return 1;
-
-}
-
-void obtener_metricas(int fd) {
 
 }
