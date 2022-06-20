@@ -45,6 +45,7 @@ sigterm_handler(const int signal) {
 }
 
 int main(const int argc, const char ** argv){
+
     parse_args(argc, (char **) argv);
 
     close(STDIN_FILENO);

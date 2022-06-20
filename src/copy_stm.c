@@ -111,6 +111,7 @@ unsigned copy_read(struct selector_key *key) {
     }
     return check_close_connection(key, copy_stm);
 finally:
+    printf("Me desconecto\n");
     return ERROR;
 }
 
@@ -180,7 +181,6 @@ finally:
 
 static enum socksv5_global_state check_close_connection(struct selector_key * key, struct copy_stm * cp_stm) {
     if(cp_stm->reading_client == false && cp_stm->reading_origin == false && cp_stm->writing_origin == false && cp_stm->writing_client == false) {
-        log_new_connection("Client disconnected", key);
         return DONE;
     }
     return COPY;

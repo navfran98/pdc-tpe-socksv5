@@ -18,46 +18,47 @@ void socksv5_passive_accept(struct selector_key *key) {
     struct sockaddr_storage new_client_addr;
     struct socksv5 * socksv5 = NULL;
     socklen_t new_client_addr_len = sizeof(new_client_addr);
+    if (get_concurrent_connections() < MAX_CONCURRENT_CONNECTIONS) {
+        const int client_sock = accept(key->fd, (struct sockaddr*)&new_client_addr, &new_client_addr_len);
 
-    const int client_sock = accept(key->fd, (struct sockaddr*)&new_client_addr, &new_client_addr_len);
-
-    if(client_sock == -1) {
-        goto finally;
-    } 
-
-    if(selector_fd_set_nio(client_sock) == -1) {
-        goto finally;
-    }
-    
-    socksv5 = new_socksv5(client_sock);
-    if(socksv5 == NULL) {
-        goto finally;
-    }
-    
-    memcpy(&socksv5->client_addr, &new_client_addr, new_client_addr_len);
-
-    if (get_concurrent_connections() > MAX_CONCURRENT_CONNECTIONS) {
-        if(selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS)
+        if(client_sock == -1) {
             goto finally;
-    }
+        } 
 
-    if(selector_register(key->s, client_sock, &socksv5_active_handler, OP_READ, socksv5) != SELECTOR_SUCCESS) {
+        if(selector_fd_set_nio(client_sock) == -1) {
+            goto finally;
+        }
+        
+        socksv5 = new_socksv5(client_sock);
+        if(socksv5 == NULL) {
+            goto finally;
+        }
+        
+        memcpy(&socksv5->client_addr, &new_client_addr, new_client_addr_len);
+
+        /*if (get_concurrent_connections() >= MAX_CONCURRENT_CONNECTIONS) {
+            if(selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS)
+                goto finally;
+        }*/
+
+        if(selector_register(key->s, client_sock, &socksv5_active_handler, OP_READ, socksv5) != SELECTOR_SUCCESS) {
         //Ocurrio un error
-        goto finally;
+            goto finally;
+        }
+        add_connection();
+        return;
+    finally:
+        if(client_sock != -1) {
+            close(client_sock);
+        }
+        if(socksv5 != NULL) {
+            socksv5_destroy(key->data);
+        }
+        
     }
-
-    add_connection();
-
     return;
-
-finally:
-    if(client_sock != -1) {
-        close(client_sock);
-    }
-    if(socksv5 != NULL) {
-        socksv5_destroy(key->data);
-    }
 }
+
 struct socksv5 * new_socksv5(int client_fd) {
     //Creamos la estructura socksv5
     struct socksv5 * socksv5 = calloc(1,sizeof(*socksv5));
@@ -131,6 +132,7 @@ socksv5_done(struct selector_key * key) {
     }
     
     // 2. Removemos la conexion de las metricas
+    log_new_connection("Client disconnected", key);
     remove_connection();
     
     // 3. Lo eliminamos de la lista y eliminamos la estructura
@@ -192,7 +194,7 @@ socksv5_timeout(struct selector_key * key) {
 	struct socksv5 * socksv5 = ATTACHMENT(key);
 
 	time(&socksv5->last_update);
-
+    printf("Timeout\n");
 	enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_timeout(stm, key);
 
 	if(state == ERROR) {
