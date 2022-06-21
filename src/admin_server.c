@@ -10,10 +10,14 @@
 #include "../headers/admin_server.h"
 #include "../headers/buffer.h"
 #include "../headers/admin_stm.h"
+#include "../headers/admin_request_parser.h"
+#include "../headers/admin_auth_parser.h"
 
 
 struct admin * new_admin(int fd);
 static void destroy_admin(struct selector_key *key);
+
+struct admin * first = NULL;
 
 static const struct fd_handler admin_active_handler = {
         .handle_read = admin_read,
@@ -37,7 +41,8 @@ void admin_passive_accept(struct selector_key *key) {
         goto finally;
     }
 
-    
+    //a0 NULL
+
     ad = new_admin(key->fd);
     if(ad == NULL) {
         printf("ad dio null\n");
@@ -65,9 +70,24 @@ struct admin * new_admin(int fd) {
     struct admin * admin = malloc(sizeof(*admin));
 
     if(admin == NULL) { goto finally; }
-
-    //Se setean los atributos
     memset(admin, 0x00, sizeof(*admin));
+
+    if(first == NULL){
+        first = admin;
+        admin->next = NULL;
+    }else{
+        
+        struct admin * aux = first;
+        int i = 0;
+        while(aux->next != NULL){
+            aux=aux->next;
+            i++;
+        }
+        aux->next = admin;
+        admin->next = NULL;
+        admin->list_index = i + 1;
+    }
+    //Se setean los atributos
     admin->admin_fd = fd;
 
     admin->stm.initial = ADMIN_AUTH;
@@ -95,7 +115,35 @@ static void destroy_admin(struct selector_key *key){
         close(key->fd);
     }
 
+    struct admin * aux = first;
+    int i = 0;
+    for(; i < (ad->list_index - 1); i++){
+        aux = aux->next;
+    }
+    aux->next = ad->next;
+    while(aux->next != NULL){
+        i++;
+        aux->list_index = i;
+    }
+    
+    if(first == ad){
+        first = NULL;
+    }
+
+    free_admin_auth_parser(&ad->admin_auth_stm.admin_auth_parser);
+    free_parser(&ad->admin_req_stm.admin_request_parser);
     free(ad);
+}
+
+void free_all_admins(){
+    struct admin * iterator = first;
+    struct admin * aux = iterator;
+    while(iterator != NULL){
+        iterator = iterator->next;
+        free_parser(&aux->admin_req_stm.admin_request_parser);
+        free(aux);
+        aux = iterator;
+    }
 }
 
 
@@ -119,3 +167,4 @@ void admin_write(struct selector_key *key) {
         destroy_admin(key);
     }
 }
+

@@ -4,8 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../headers/buffer.h"
+#include "selector.h"
 
-#define CREDENTIALS_SIZE 255
+#define CREDENTIALS_SIZE 100
 #define POP3_BUFF 4096
 
 enum pop3_sniffer_state
@@ -56,8 +57,10 @@ struct pop3_sniffer{
 
     buffer buffer;
     uint8_t buff[POP3_BUFF];
-    char user[CREDENTIALS_SIZE];
-    char pass[CREDENTIALS_SIZE];
+
+
+    char * user;
+    char * pass;
 
     bool is_parsing;
 
@@ -69,7 +72,7 @@ struct pop3_sniffer{
 
 enum pop3_sniffer_state parse_pop3_sniffer(struct pop3_sniffer* sniffer, uint8_t ch);
 void pop3_sniffer_init(struct pop3_sniffer * sniffer);
-enum pop3_sniffer_state pop3_sniffer_consume(struct pop3_sniffer * sniffer);
+enum pop3_sniffer_state pop3_sniffer_consume(struct selector_key * key, struct pop3_sniffer * sniffer);
 
 
 #endif

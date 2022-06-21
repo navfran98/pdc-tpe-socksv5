@@ -37,4 +37,6 @@ admin_auth_parser_feed(const uint8_t c, struct admin_auth_parser * pars);
 int
 admin_auth_fill_msg(buffer * buff, uint8_t ret);
 
+void free_admin_auth_parser(struct admin_auth_parser * pars);
+
 #endif

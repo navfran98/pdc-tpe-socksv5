@@ -14,11 +14,13 @@
 
 unsigned
 admin_request_init(const unsigned state, struct selector_key *key){
-    printf("Request_Init\n");
     struct admin_request_stm * admin_request_stm = &ADMIN_ATTACHMENT(key)->admin_req_stm;
 
     admin_request_stm->rb = &(ADMIN_ATTACHMENT(key)->read_buffer);
     admin_request_stm->wb = &(ADMIN_ATTACHMENT(key)->write_buffer);
+
+    buffer_reset(admin_request_stm->rb);
+    buffer_reset(admin_request_stm->wb);
 
     admin_req_parser_init(&admin_request_stm->admin_request_parser);
     return state;
@@ -26,7 +28,6 @@ admin_request_init(const unsigned state, struct selector_key *key){
 
 unsigned
 admin_request_read(struct selector_key *key) {
-    printf("Request_Read\n");
     struct admin_request_stm * admin_request_stm = &ADMIN_ATTACHMENT(key)->admin_req_stm;
 
     size_t nbytes;
@@ -48,7 +49,6 @@ finally:
 
 unsigned
 admin_request_write(struct selector_key *key) {
-    printf("Request_Write\n");
     struct admin_request_stm * admin_request_stm = &ADMIN_ATTACHMENT(key)->admin_req_stm;
 
     admin_req_fill_msg(admin_request_stm->wb, &admin_request_stm->admin_request_parser);

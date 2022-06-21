@@ -36,11 +36,6 @@ void socksv5_passive_accept(struct selector_key *key) {
         
         memcpy(&socksv5->client_addr, &new_client_addr, new_client_addr_len);
 
-        /*if (get_concurrent_connections() >= MAX_CONCURRENT_CONNECTIONS) {
-            if(selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS)
-                goto finally;
-        }*/
-
         if(selector_register(key->s, client_sock, &socksv5_active_handler, OP_READ, socksv5) != SELECTOR_SUCCESS) {
         //Ocurrio un error
             goto finally;
@@ -66,6 +61,8 @@ struct socksv5 * new_socksv5(int client_fd) {
         goto finally;
     }
 
+    memset(socksv5, 0x00, sizeof(struct socksv5));
+
     //Lo ubicamos en la lista
     if (first == NULL) {
         first = socksv5;
@@ -80,9 +77,8 @@ struct socksv5 * new_socksv5(int client_fd) {
         socksv5->prev = aux;
         socksv5->next = NULL;
     }
-    
+
     //Se setean los atributos
-    memset(socksv5, 0x00, sizeof(struct socksv5));
 
     socksv5->origin_fd = -1;
     socksv5->client_fd = client_fd;
@@ -109,7 +105,6 @@ destroy_socksv5_pool(void) {
         current = aux;
         aux = aux->next;
         socksv5_destroy(current);
-        free(current);
     }
 }
 
@@ -148,10 +143,34 @@ socksv5_destroy(struct socksv5 *s) {
         }
         if(s->prev != NULL){
             s->prev->next = s->next;
-        } else {
+        }else{
             first = s->next;
         } 
+
+        if(first == s){
+            first = NULL;
+        }
+
         // Elimino la estructura y hago los frees
+        if(s->auth.auth_parser.password != NULL){
+            free(s->auth.auth_parser.password);
+        }
+        if(s->auth.auth_parser.user != NULL){
+            free(s->auth.auth_parser.user);
+        }
+        if(s->request.request_parser.addr != NULL)
+            free(s->request.request_parser.addr);
+
+        if(s->greeting.greeting_parser.methods != NULL)
+            free(s->greeting.greeting_parser.methods);
+
+        if(s->pop3sniffer.user != NULL){
+            free(s->pop3sniffer.user);
+        }
+        if(s->pop3sniffer.pass != NULL){
+            free(s->pop3sniffer.pass);
+        }
+        free(s);
     }
 }
 
@@ -194,7 +213,6 @@ socksv5_timeout(struct selector_key * key) {
 	struct socksv5 * socksv5 = ATTACHMENT(key);
 
 	time(&socksv5->last_update);
-    printf("Timeout\n");
 	enum socksv5_global_state state = (enum socksv5_global_state) stm_handler_timeout(stm, key);
 
 	if(state == ERROR) {

@@ -142,6 +142,8 @@ int main(const int argc, const char ** argv){
 
 finally:
     ;
+    destroy_socksv5_pool();
+    free_all_admins();
     int ret = 0;
     if(ss != SELECTOR_SUCCESS) {
         fprintf(stderr, "%s: %s\n", (err_msg == NULL) ? "": err_msg, ss == SELECTOR_IO ? strerror(errno) : selector_error(ss));
@@ -150,6 +152,8 @@ finally:
         perror(err_msg);
         ret = 1;
     }
+
+
     if(selector != NULL) {
         selector_destroy(selector);
     }
@@ -168,7 +172,8 @@ finally:
         close(ipv6_manager_passive_socket);
     }
 
-    destroy_socksv5_pool(); 
+
+
 
     return ret;
 }

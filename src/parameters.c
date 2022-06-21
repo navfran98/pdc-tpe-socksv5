@@ -45,8 +45,11 @@ static void user(char * s, struct user * user) {
     char * name = calloc(len,sizeof(char));
     char * pass = calloc(len,sizeof(char));
     splitstr(s,len, ':', name, pass);
-    if(pass == NULL) {
-        fprintf(stderr, "Missing password for user: %s\n", name);
+    if(strlen(pass)  == 0 || strlen(name)  == 0) {
+        fprintf(stderr, "Invalid user declaration\n");
+        exit(1);
+    } else if(strlen(pass) > MAX_CREDENTIALS_LEN || strlen(name) > MAX_CREDENTIALS_LEN){
+        fprintf(stderr, "Credentials must have less than 50 characters\n");
         exit(1);
     } else {
         user->name = name;
@@ -54,7 +57,10 @@ static void user(char * s, struct user * user) {
     }
 }
 
-int add_user( char*name, char*pass){
+int add_user(char * name, char * pass){
+    if(strlen(pass) > MAX_CREDENTIALS_LEN || strlen(name) > MAX_CREDENTIALS_LEN){
+        return -2;
+    }
     if(parameters->user_count < MAX_USERS){
         struct user * user_to_add = parameters->users + parameters->user_count;
         user_to_add->name = name;
@@ -70,20 +76,23 @@ int add_user( char*name, char*pass){
 
 static void
 version(void) {
-    fprintf(stderr, "socksv5 version\n");
+    fprintf(stderr, "Socksv5 Proxy version\n");
 }
 
 static void
 usage(const char * name) {
     fprintf(stderr,
-        "Usage: %s [OPTION]...\n"
+        "Guide: %s [OPTION]\n"
         "\n"
-        "   -h               Imprime guía de ayuda.\n"
-        "   -l <SOCKS addr>  Dirección donde servirá el proxy SOCKS.\n"
-        "   -L <conf  addr>  Dirección donde servirá el servicio de admin.\n"
-        "   -p <SOCKS port>  Puerto entrante conexiones SOCKS.\n"
-        "   -P <conf port>   Puerto entrante conexiones admin\n"
-        "   -v               Imprime versión.\n"
+        "   -h                              Imprime guía para ejecutar el servidor.\n"
+        "   -l <SOCKSv5 addr>               Dirección donde servirá el servidor proxy SOCKSv5.\n"
+        "   -L <monit addr>                 Dirección donde servirá el servidor de monitoreo y control.\n"
+        "   -p <SOCKSv5 port>               Puerto entrante para conexiones al servidor proxy SOCKSv5.\n"
+        "   -P <monit port>                 Puerto entrante para conexiones al servidor de monitoreo y control.\n"
+        "   -v                              Imprime versión del servidor proxy SOCKSv5.\n"
+        "   -u <username>:<password>        Registra dicho usuario para luego conectarse al servidor.\n"
+        "   -U <admin_name>:<admin_pass>    Registra al usuario admin para acceder al servidor de monitoreo.\n"
+        "   -N                              Deshabilitas los disectores para sniffin POP3.\n"
         "\n",
         name);
     exit(1);
@@ -106,9 +115,8 @@ parse_args(const int argc, char **argv) {
     int c;
     parameters->user_count = 0;
     parameters->admin_count = 0;
-
     while(true) {
-        c = getopt(argc, argv, "hl:L:Np:P:v:u:a:");
+        c = getopt(argc, argv, "hl:L:Np:P:vu:U:a:");
         if (c == -1)
             break;
 
@@ -133,7 +141,6 @@ parse_args(const int argc, char **argv) {
                 break;
 
             case 'a':
-                printf("%s\n",optarg);
                 if(parameters->admin_count >= MAX_ADMINS) {
                     fprintf(stderr, "Can't have more than %d admins.\n", MAX_ADMINS);
                     exit(1);
@@ -144,7 +151,6 @@ parse_args(const int argc, char **argv) {
                 break;
 
             case 'u':
-                printf("%s\n", optarg);
                 if(parameters->user_count >= MAX_USERS) {
                     fprintf(stderr, "Can't have more than %d users.\n", MAX_USERS);
                     exit(1);

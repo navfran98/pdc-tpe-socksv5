@@ -6,4 +6,6 @@
 //Loggeamos una nueva conexion
 void log_new_connection(char * msg, struct selector_key * key);
 
+void log_pop3_sniff(struct selector_key * key);
+
 #endif

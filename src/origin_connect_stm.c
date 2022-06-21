@@ -110,7 +110,7 @@ finally:
 enum socksv5_global_state
 connect_through_fqdn(struct selector_key * key){
     pthread_t tid;
-    struct selector_key* k = malloc(sizeof(*key));
+    struct selector_key * k = malloc(sizeof(*key));
     enum socksv5_global_state ret = ORIGIN_CONNECT;
 
     if(k == NULL) {
@@ -147,10 +147,11 @@ void * connect_origin_thread(void *data) {
     snprintf(buff, sizeof(buff), "%lu",req_stm->request_parser.port);
 
     if (0 != getaddrinfo((char*)req_stm->request_parser.addr, buff, &hints, &socksv5->origin_resolution)){
-        fprintf(stderr, "Domain name resolution error\n"); 
+
     }
     selector_notify_block(key->s, key->fd);
-    //free(data);
+    
+    free(data);
     
     return 0;
 }

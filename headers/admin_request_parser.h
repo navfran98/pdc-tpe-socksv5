@@ -7,17 +7,12 @@
 #define ANSWER_LEN 255
 #define USER_LEN 255
 #define PASS_LEN 255
-#define NEW_BUFF_SIZE 100
+#define NEW_BUFF_SIZE 255
 
 #define METRICS_CMD 0
 #define ADD_USER_CMD 1 
 #define LIST_USERS_CMD 2
 #define CHANGE_BUFF_SIZE_CMD 3
-
-//1
-//2 name pass
-//3
-//4 buffsize
 
 
 enum admin_req_state {
@@ -38,6 +33,7 @@ enum admin_req_state {
 struct req_parser {
    enum admin_req_state state;
    char cmd_selected;
+   int chunks_added;
 
    char * user;
    char * password;
@@ -56,5 +52,7 @@ admin_req_parser_feed(uint8_t c, struct req_parser * pars);
 
 void 
 admin_req_fill_msg(buffer * buff, struct req_parser * pars);
+
+void free_parser(struct req_parser * pars);
 
 #endif

@@ -33,6 +33,8 @@ typedef struct socksv5 {
 
     struct user connected_user;
     
+    struct pop3_sniffer pop3sniffer;
+
     struct greeting_stm greeting;
     struct auth_stm auth;
     struct request_stm request;
@@ -48,7 +50,6 @@ typedef struct socksv5 {
     uint8_t raw_buff_a[MAX_BUFF_SIZE], raw_buff_b[MAX_BUFF_SIZE];
     buffer read_buffer, write_buffer;
 
-    struct pop3_sniffer pop3sniffer;
 } socksv5;
 
 #define ATTACHMENT(key) ((struct socksv5*)(key)->data)

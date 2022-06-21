@@ -15,7 +15,6 @@
 
 unsigned
 admin_auth_init(const unsigned state, struct selector_key *key){
-    printf("Auth init\n");
     struct admin_auth_stm * admin_auth_stm = &ADMIN_ATTACHMENT(key)->admin_auth_stm;
 
     admin_auth_stm->rb = &(ADMIN_ATTACHMENT(key)->read_buffer);
@@ -28,7 +27,6 @@ admin_auth_init(const unsigned state, struct selector_key *key){
 
 unsigned
 admin_auth_read(struct selector_key *key) {
-    printf("Auth read\n");
     struct admin_auth_stm * admin_auth_stm = &ADMIN_ATTACHMENT(key)->admin_auth_stm;
 
     size_t nbytes;
@@ -37,10 +35,8 @@ admin_auth_read(struct selector_key *key) {
     
     uint8_t ret_state = ADMIN_AUTH; // current state
     if(n > 0) {
-        printf("Recibí algo!!!\n");
         buffer_write_adv(admin_auth_stm->rb, n);
         enum admin_auth_state state = admin_consume_auth_buffer(admin_auth_stm->rb, &admin_auth_stm->admin_auth_parser);
-        printf("STATE: %d\n", state);
         if(state == admin_auth_done || state == admin_auth_bad_syntax){
             if(state == admin_auth_done){
                 admin_auth_stm->admin_auth_parser.ret = AUTH_BAD_CREDENTIALS;
@@ -54,7 +50,6 @@ admin_auth_read(struct selector_key *key) {
                 goto finally;
             }
         }
-        printf("Y se lo llevó...\n");
         return ret_state;
     }
 finally:
@@ -63,7 +58,6 @@ finally:
 
 unsigned
 admin_auth_write(struct selector_key *key) {
-    printf("EN el auth write!!!\n");
     struct admin_auth_stm * admin_auth_stm = &ADMIN_ATTACHMENT(key)->admin_auth_stm;
 
     admin_auth_fill_msg(admin_auth_stm->wb, admin_auth_stm->admin_auth_parser.ret);
@@ -74,7 +68,6 @@ admin_auth_write(struct selector_key *key) {
 
     uint8_t ret_state = ADMIN_AUTH;
     if(ret > 0) {
-        printf("Mandé algo!!\n");
         buffer_read_adv(admin_auth_stm->wb, ret);
         if(!buffer_can_read(admin_auth_stm->wb)) {
             if(selector_set_interest_key(key, OP_READ) != SELECTOR_SUCCESS) {

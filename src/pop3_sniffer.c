@@ -1,9 +1,14 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
 
 #include "../headers/pop3_sniffer.h"
 #include "../headers/buffer.h"
+#include "../headers/selector.h"
+#include "../headers/socksv5_server.h"
+#include "../headers/logger.h"
 
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
@@ -22,6 +27,8 @@ void pop3_sniffer_init(struct pop3_sniffer* sniffer){
     sniffer->read = 0;
     sniffer->remaining = strlen("+OK");
     sniffer->is_parsing = true;
+    sniffer->user = calloc(CREDENTIALS_SIZE,sizeof(char));
+    sniffer->pass = calloc(CREDENTIALS_SIZE,sizeof(char));
 }
 
 static enum pop3_sniffer_state read_ok_msg(struct pop3_sniffer* sniffer, uint8_t ch){
@@ -69,7 +76,7 @@ enum pop3_sniffer_state read_user(struct pop3_sniffer* sniffer, uint8_t ch){
 
     enum pop3_sniffer_state st = POP3_READ_USER;
 
-    if(ch != '\n'){
+    if(ch != '\n' && ch != '\r'){
         if(sniffer->read < CREDENTIALS_SIZE){
             sniffer->user[sniffer->read++] = ch;
         }
@@ -110,7 +117,7 @@ enum pop3_sniffer_state read_pass(struct pop3_sniffer* sniffer, uint8_t ch){
 
     enum pop3_sniffer_state st = POP3_READ_PASS;
 
-    if(ch != '\n'){
+    if(ch != '\n' && ch != '\r'){
         if(sniffer->read < CREDENTIALS_SIZE){
             sniffer->pass[sniffer->read++] = ch;
         }
@@ -170,17 +177,20 @@ enum pop3_sniffer_state parse_pop3_sniffer(struct pop3_sniffer* sniffer, uint8_t
     default:
         break;
     }
-
     return sniffer->state;
 }
 
-enum pop3_sniffer_state pop3_sniffer_consume(struct pop3_sniffer * sniffer){
+enum pop3_sniffer_state pop3_sniffer_consume(struct selector_key * key, struct pop3_sniffer * sniffer){
     while(buffer_can_read(&sniffer->buffer) && sniffer->state != POP3_FINISH && sniffer->state != POP3_SNIFF_SUCCESSFUL){
         uint8_t ch = buffer_read(&sniffer->buffer);
         parse_pop3_sniffer(sniffer, ch);
     }
     if(sniffer->state == POP3_SNIFF_SUCCESSFUL){
-        printf("**** POP3 SNIFFER: ****\nUsername: %s\nPassword: %s\n***********************\n", sniffer->user, sniffer->pass);
+       //printf("**** POP3 SNIFFER: ****\nUsername: %s\nPassword: %s\n***********************\n", sniffer->user, sniffer->pass);
+        // char * aux = calloc(5*CREDENTIALS_SIZE,sizeof(char));
+        // sprintf(aux, "%s\t%s", sniffer->user, sniffer->pass);
+        log_pop3_sniff(key);
+        //free(aux);
     }
     return sniffer->state;
 }

@@ -31,7 +31,6 @@ unsigned copy_init(const unsigned state, struct selector_key * key) {
     return state;
 }
 
-
 unsigned copy_read(struct selector_key *key) {
     struct socksv5 * socksv5 = ATTACHMENT(key);
     struct copy_stm * copy_stm = &ATTACHMENT(key)->copy;
@@ -82,12 +81,10 @@ unsigned copy_read(struct selector_key *key) {
         }
         
         if(key->fd == socksv5->origin_fd) {
-            printf("Se desconectó el origin\n");
             copy_stm->reading_origin = false;
             copy_stm->writing_origin = false;
             copy_stm->reading_client = false;
         } else if(key->fd == socksv5->client_fd) {
-            printf("Se desconectó el client\n");
             copy_stm->reading_client = false;
             copy_stm->writing_client = false;
             copy_stm->reading_origin = false;
@@ -95,7 +92,6 @@ unsigned copy_read(struct selector_key *key) {
 
         if (!buffer_can_read(buff)) {
             if (shutdown(fd_target, SHUT_WR) < 0) {
-                printf("Error en shutdown!\n");
                 goto finally;
             }
             if(key->fd == socksv5->origin_fd) {
@@ -111,7 +107,6 @@ unsigned copy_read(struct selector_key *key) {
     }
     return check_close_connection(key, copy_stm);
 finally:
-    printf("Me desconecto\n");
     return ERROR;
 }
 
@@ -205,7 +200,8 @@ static void sniff_pop3(struct selector_key *key, uint8_t * ptr, ssize_t size){
             memcpy(pop3_ptr, ptr, count);
             buffer_write_adv(&sniffer->buffer, count);
         }
-        pop3_sniffer_consume(sniffer);
+        
+        pop3_sniffer_consume(key, sniffer);
     }
 }
 

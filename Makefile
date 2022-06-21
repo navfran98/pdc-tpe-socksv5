@@ -27,7 +27,7 @@ socks5d: $(OFILES)
 	$(GCC) $(OFILES) $(CFLAGS) -o socks5d
 
 client: $(COFILES)
-	$(GCC) $(COFILES) $(CFLAGS) -o clients
+	$(GCC) $(COFILES) $(CFLAGS) -o socks5_clt
 
 # tests: 
 # 	cd test; make all;
@@ -38,4 +38,4 @@ clean:
 	rm -rf $(OFILES); rm -rf $(COFILES)
 
 run:
-	make clean; make all; ./socks5d -a santi:santi -u coco:coco;
+	make clean; make all; ./socks5d -a admin:admin -u user:user;

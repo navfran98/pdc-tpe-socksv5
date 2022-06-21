@@ -18,6 +18,9 @@ struct admin {
     struct admin_auth_stm admin_auth_stm;  
     struct admin_request_stm admin_req_stm;
     struct state_machine stm; 
+
+    int list_index;
+    struct admin * next;
 };
 
 void admin_passive_accept(struct selector_key * key);
@@ -25,6 +28,8 @@ void admin_passive_accept(struct selector_key * key);
 void admin_read(struct selector_key * key);
 
 void admin_write(struct selector_key * key);
+
+void free_all_admins();
 
 const struct state_definition * admin_describe_states(void);
 

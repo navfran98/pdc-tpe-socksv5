@@ -29,6 +29,15 @@ admin_consume_auth_buffer(buffer * buff, struct admin_auth_parser * pars) {
     return state;
 }
 
+void free_admin_auth_parser(struct admin_auth_parser * pars){
+    if(pars->user != NULL){
+        free(pars->user);
+    }
+    if(pars->password != NULL){
+        free(pars->password);
+    }
+}
+
 enum admin_auth_state
 admin_auth_parser_feed(const uint8_t c, struct admin_auth_parser * pars) {
     switch(pars->state) {

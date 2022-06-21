@@ -7,6 +7,7 @@
 
 #define MAX_USERS 10
 #define MAX_ADMINS 1
+#define MAX_CREDENTIALS_LEN 50
 
 struct user {
     char * name;

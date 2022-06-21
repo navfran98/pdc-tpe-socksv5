@@ -43,4 +43,7 @@ auth_parser_feed(uint8_t c, struct auth_parser * pars);
 void
 auth_fill_msg(buffer * buff, uint8_t method);
 
+
+
+
 #endif

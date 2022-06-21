@@ -19,10 +19,6 @@ void load_users(uint8_t * answer, char ** aux);
 int create_user(struct req_parser * pars);
 int change_buffer_size(char * new_buff_size);
 
-void add_string_space(char * str, size_t space){
-    size_t size = strlen(str);
-    str = realloc(str,sizeof(*str)*size + size);
-}
 
 void 
 admin_req_parser_init(struct req_parser * pars) {
@@ -31,6 +27,19 @@ admin_req_parser_init(struct req_parser * pars) {
    pars->password = NULL;
    pars->new_buff_size = NULL;
    pars->index = 0; 
+   pars->chunks_added = 1;
+}
+
+void free_parser(struct req_parser * pars){
+    if(pars->user != NULL){
+        free(pars->user);
+    }
+    if(pars->password != NULL){
+        free(pars->password);
+    }
+    if(pars->new_buff_size != NULL){
+        free(pars->new_buff_size);
+    }
 }
 
 enum admin_req_state
@@ -82,11 +91,13 @@ admin_req_parser_feed(const uint8_t c, struct req_parser * pars) {
                 pars->password = malloc(PASS_LEN * sizeof(char));
                 pars->user[pars->index] = '\0';
                 pars->index = 0;
+                pars->chunks_added = 0;
                 pars->state = req_reading_pass;
             }else{
                 if(c != '\n'){
-                    if(pars->index == USER_LEN){
-                        add_string_space(pars->user, CHUNK_SIZE);
+                    if(pars->index == USER_LEN+ pars->chunks_added * CHUNK_SIZE){
+                        pars->user = realloc(pars->user, USER_LEN + pars->chunks_added * CHUNK_SIZE);
+                        pars->chunks_added++;
                     }
                     pars->user[pars->index++] = c;
                 }else{
@@ -103,9 +114,11 @@ admin_req_parser_feed(const uint8_t c, struct req_parser * pars) {
                pars->password[pars->index] = '\0';
                pars->state = req_done;
                pars->index = 0;
+               pars->chunks_added = 0;
             }else{
-                if(pars->index == PASS_LEN){
-                    add_string_space(pars->password, CHUNK_SIZE);
+                if(pars->index == PASS_LEN + pars->chunks_added * CHUNK_SIZE){
+                    pars->password = realloc(pars->password, PASS_LEN + pars->chunks_added * CHUNK_SIZE);
+                    pars->chunks_added++;
                 }
                 pars->password[pars->index++] = c;
             }
@@ -124,10 +137,13 @@ admin_req_parser_feed(const uint8_t c, struct req_parser * pars) {
         case req_reading_buff_size:
             if(c == '\n'){
                 pars->new_buff_size[pars->index++] = '\0';
+                pars->chunks_added = 0;
+                pars->index = 0;
                 pars->state = req_done;
             }else if(c >= '0' && c <= '9'){
-                if(pars->index == NEW_BUFF_SIZE){
-                    add_string_space(pars->new_buff_size, CHUNK_SIZE);
+                if(pars->index == NEW_BUFF_SIZE + pars->chunks_added * CHUNK_SIZE){
+                    pars->new_buff_size = realloc(pars->new_buff_size, NEW_BUFF_SIZE + pars->chunks_added * CHUNK_SIZE);
+                    pars->chunks_added++;
                 }
                 pars->new_buff_size[pars->index++] = c;
             }else{
@@ -158,11 +174,11 @@ void admin_req_fill_msg(buffer * buff, struct req_parser * pars){
     size_t space_left;
     unsigned state = pars->state;
     uint8_t * where_to_write = buffer_write_ptr(buff, &space_left);
-    char * aux = malloc(ANSWER_LEN * sizeof(char));
     int ret;
     if(space_left < 1){
-        return ;  //TODO: ver este return!!!
+        return;
     }
+    char * aux = malloc(ANSWER_LEN * sizeof(char));
     if(state == req_invalid_cmd){
         sprintf(aux, "\nInvalid command\n");
         memcpy(where_to_write, aux, strlen(aux) + 1);
@@ -175,8 +191,10 @@ void admin_req_fill_msg(buffer * buff, struct req_parser * pars){
                 ret = create_user(pars);
                 if(ret == 0){
                     sprintf(aux, "\nSuccess - New user added\n");
-                }else{
+                }else if(ret == -1){
                     sprintf(aux, "\nError - already max number of users exist\n");
+                }else{
+                    sprintf(aux, "\nError - Credentials must have less than 50 characters\n");
                 }
                 memcpy(where_to_write, aux, strlen(aux) + 1);
                 break;

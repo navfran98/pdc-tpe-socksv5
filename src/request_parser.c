@@ -103,7 +103,7 @@ request_parser_feed(const uint8_t c, struct request_parser * req_pars) {
                 }
             } else {
                 req_pars->addr[req_pars->addr_index] = c;
-				req_pars->addr_index++;
+                req_pars->addr_index++;
                 if(req_pars->addr_index == req_pars->addr_len) {
                     req_pars->addr[req_pars->addr_index] = '\0';
                     req_pars->state = request_reading_port;
