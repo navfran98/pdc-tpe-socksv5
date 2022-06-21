@@ -39,9 +39,9 @@ This command will generate inside the root folder, the two executable of the pro
 
     **```-v```** -> Imprime versión del servidor proxy SOCKSv5.
     
-    **```-u <username>:<password>```** -> Registra dicho usuario para luego conectarse al servidor.
+    **```-u <username>:<password>```** -> Registra dicho usuario para luego conectarse al servidor (Máximo 10 usuarios).
 
-    **```-U <admin_name>:<admin_pass>```** -> Registra al usuario admin para acceder al servidor de monitoreo.
+    **```-U <admin_name>:<admin_pass>```** -> Registra al usuario admin para acceder al servidor de monitoreo (Máximo 1 usuario admin).
 
     **```-N```** -> Deshabilitas los disectores para sniffin POP3.
 
